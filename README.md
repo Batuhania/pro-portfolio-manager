@@ -1,53 +1,49 @@
 # Pro Portfolio Manager
 
-Personal portfolio tracking application - PWA supported, mobile responsive.
+![Version](https://img.shields.io/badge/version-3.0-blue.svg) ![License](https://img.shields.io/badge/license-Private-red.svg) ![PWA](https://img.shields.io/badge/PWA-Ready-success.svg)
 
-## 🚀 Setup
+> Modern, secure, and mobile-first personal portfolio tracking application.
 
-1. Go to the Settings page
-2. Enter the following information:
+<p align="center">
+  <img src="app_screenshot_1770385832246.png" width="300" alt="Pro Portfolio Manager Screenshot">
+</p>
 
-| Field | Description |
-|-------|-------------|
-| **Supabase URL** | `https://YOUR_PROJECT.supabase.co` |
-| **Supabase Key** | Anon/Public key (Dashboard > Settings > API) |
-| **OpenAI API Key** | (Optional) For AI analysis |
+## 🚀 Live Demo
 
-3. Click "Save & Refresh"
+[**Open App**](https://batuhania.github.io/pro-portfolio-manager/)
 
-**Quick Setup via URL:**
-You can auto-configure by adding parameters to the URL:
+## ⚡ Quick Setup
+
+1. **Open the App:** Click the demo link above.
+2. **Configure:** Go to **Settings** > Enter your API keys.
+
+**One-Click Configuration:**
+Use this URL format to auto-configure (URL is safe, keys stored locally):
 ```
-https://yourdomain.com/?sburl=YOUR_URL&sbkey=YOUR_KEY&aikey=YOUR_AI_KEY
+https://batuhania.github.io/pro-portfolio-manager/?sburl=YOUR_URL&sbkey=YOUR_KEY
 ```
 
 ## 📱 Features
 
-- ✅ PWA - Add to home screen
-- ✅ Mobile responsive design
-- ✅ iPhone notch/safe-area support
-- ✅ Swipe gesture navigation
-- ✅ Live price tracking (Supabase)
-- ✅ AI portfolio analysis (OpenAI)
-- ✅ Excel/CSV export
+- **PWA Support:** Installable on iOS/Android as a native app.
+- **Mobile Optimized:** Designed for touch, swipe gestures, and safe-area insets.
+- **Real-time Data:** Fetches live asset prices via Supabase.
+- **AI Analysis:** Integration with OpenAI for portfolio insights.
+- **Privacy First:** No hardcoded keys. All data stored in `localStorage`.
 
-## 🔒 Security
+## 🛠 Tech Stack
 
-This repository contains **NO hardcoded API keys**.  
-All API credentials are entered by the user in Settings and stored in the browser's localStorage.
+- **Frontend:** Vanilla HTML5, CSS3, JavaScript (ES6+)
+- **Storage:** Supabase (Backend), LocalStorage (Client)
+- **Charts:** Chart.js
+- **Icons:** FontAwesome
 
-## 📁 File Structure
+## 🔒 Security Note
 
-```
-portfolio/
-├── index.html      # Main application (single file)
-├── manifest.json   # PWA manifest
-├── sw.js           # Service Worker
-├── icon-192.png    # PWA icon
-├── icon-512.png    # PWA icon
-└── README.md       # This file
-```
+This repository is **100% clean** of secrets.
+- No hardcoded API keys.
+- No sensitive URLs in commit history.
+- API keys are input by the user and stored only on their device.
 
-## 📝 License
-
-Private - All rights reserved.
+---
+© 2026 Batuhan. All rights reserved.
