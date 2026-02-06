@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2910/2910311.png">
     <script>
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
             navigator.serviceWorker.register('sw.js')
                 .then(() => console.log('✅ Service Worker Hazır'))
                 .catch(err => console.error('❌ Service Worker Hatası:', err));
@@ -1024,9 +1024,8 @@
                         console.warn("API Fail:", fetchErr);
                         usedMock = true;
 
-                        // SHOW DEMO BANNER
-                        document.getElementById('demo-badge').classList.add('show');
-                        document.getElementById('demo-badge').innerHTML = '<i class="fas fa-exclamation-triangle"></i> BAĞLANTI HATASI (Supabase Key Yok veya Hatalı) - Veriler Güncellenemiyor.';
+                        // SHOW ERROR TOAST INSTEAD OF BADGE
+                        if (window.UI) window.UI.toast("Bağlantı Hatası - Veriler Güncellenemiyor", false);
 
                         // NO MOCK DATA - Production Mode means empty if no API
                         dbData = [];
