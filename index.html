@@ -53,23 +53,17 @@
         }
 
         /* Style number input spinners */
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-
+        /* Style number input spinners - FORCE HIDE */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
-            appearance: none;
-            width: 40px;
-            height: 100%;
-            background: var(--card);
-            border-left: 1px solid var(--border);
-            cursor: pointer;
-            opacity: 1;
-            position: absolute;
-            right: 0;
-            top: 0;
+            margin: 0;
+            display: none !important;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         /* Custom +/- buttons for number inputs */
@@ -768,7 +762,7 @@
             <button class="btn-primary" onclick="window.App.save()" style="margin-top:15px;">KAYDET</button>
             <button style="width:100%; padding:15px; background:transparent; border:none; color:#666; margin-top:5px;"
                 onclick="window.UI.closeAdd()">İptal</button>
-            <button id="btn-del"
+            <button id="btn-del" type="button"
                 style="width:100%; padding:15px; background:transparent; border:none; color:var(--red); display:none;"
                 onclick="window.App.del()">Sil</button>
         </div>
@@ -1394,11 +1388,13 @@
             },
 
             del: function () {
-                if (confirm('Sil?')) {
+                if (window.editIdx === null || window.editIdx === undefined) return;
+                if (confirm('Bu varlığı silmek istediğinize emin misiniz?')) {
                     window.Data.assets.splice(window.editIdx, 1);
                     window.Data.save();
                     window.UI.closeAdd();
                     window.UI.render();
+                    window.UI.toast('Varlık silindi', true);
                 }
             }
         };
