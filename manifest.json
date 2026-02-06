@@ -1,0 +1,16 @@
+{
+    "name": "ProPortfoy V5",
+    "short_name": "ProPortfoy",
+    "start_url": "./v5_robotlu.html",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/2910/2910311.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
