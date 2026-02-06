@@ -604,9 +604,15 @@
         </div>
         <div style="padding:20px;">
             <div class="api-box">
+                <label style="font-size:11px; color:#aaa; display:block; margin-bottom:5px;">SUPABASE URL</label>
+                <input type="text" id="inp-sb-url" class="inp" placeholder="https://xxxxx.supabase.co"
+                    style="font-size:11px;">
+
+                <div style="height:10px;"></div>
+
                 <label style="font-size:11px; color:#aaa; display:block; margin-bottom:5px;">SUPABASE KEY
-                    (PUBLIC)</label>
-                <input type="text" id="inp-api-key" class="inp" placeholder="sb_p..." style="font-size:11px;">
+                    (ANON/PUBLIC)</label>
+                <input type="text" id="inp-api-key" class="inp" placeholder="eyJhbGci..." style="font-size:11px;">
 
                 <div style="height:10px;"></div>
 
@@ -709,9 +715,11 @@
 
         window.DB_KEY = 'v33_assets';
         window.HIST_KEY = 'v33_history';
-        const SB_URL = "[REMOVED]";
-        // DEFAULT KEY (Blocked) - User can override in Settings
-        window.DEFAULT_SB_KEY = "[REMOVED]";
+
+        // Supabase Configuration - User must enter in Settings
+        // No hardcoded keys for security
+        window.SB_URL = localStorage.getItem('SB_URL') || '';
+        window.DEFAULT_SB_KEY = '';  // Removed - User must provide via Settings
 
         window.MASTER_LIST = [
             { s: "THYAO", t: "STOCK", sec: "ULASTIRMA", n: "Türk Hava Yolları" },
@@ -1050,9 +1058,15 @@
                     let usedMock = false;
 
                     const activeKey = window.Data.userKey || window.DEFAULT_SB_KEY;
+                    const sbUrl = window.SB_URL;
+
+                    // Check if Supabase is configured
+                    if (!sbUrl || !activeKey) {
+                        throw new Error("Supabase URL veya Key girilmedi. Ayarlar'dan girin.");
+                    }
 
                     try {
-                        const response = await fetch(`${SB_URL}/rest/v1/assets?select=*`, {
+                        const response = await fetch(`${sbUrl}/rest/v1/assets?select=*`, {
                             method: 'GET',
                             headers: {
                                 'apikey': activeKey,
@@ -1186,6 +1200,22 @@
                 const s = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
                 const a = document.createElement('a'); a.href = s; a.download = 'ProPortfoy_Excel.csv'; a.click();
             },
+            saveKeys: function () {
+                const sbUrl = document.getElementById('inp-sb-url').value.trim();
+                const sbKey = document.getElementById('inp-api-key').value.trim();
+                const aiKey = document.getElementById('inp-ai-key').value.trim();
+
+                if (sbUrl) localStorage.setItem('SB_URL', sbUrl);
+                if (sbKey) localStorage.setItem('SB_USER_KEY', sbKey);
+                if (aiKey) localStorage.setItem('OPENAI_KEY', aiKey);
+
+                window.SB_URL = sbUrl;
+                window.Data.userKey = sbKey;
+                window.Data.openaiKey = aiKey;
+
+                window.UI.toast('Ayarlar Kaydedildi!', true);
+                window.Data.fetchAll().then(window.UI.render);
+            },
             wipe: function () { localStorage.clear(); location.reload(); }
         };
 
@@ -1202,6 +1232,7 @@
                 window.UI.initSim();
 
                 // Show default settings
+                if (window.SB_URL) document.getElementById('inp-sb-url').value = window.SB_URL;
                 if (window.Data.userKey) document.getElementById('inp-api-key').value = window.Data.userKey;
                 if (window.Data.openaiKey) document.getElementById('inp-ai-key').value = window.Data.openaiKey;
 
