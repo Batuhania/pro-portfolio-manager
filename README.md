@@ -1,47 +1,53 @@
 # Pro Portfolio Manager
 
-Kişisel portföy takip uygulaması - PWA destekli, mobil uyumlu.
+Personal portfolio tracking application - PWA supported, mobile responsive.
 
-## 🚀 Kurulum
+## 🚀 Setup
 
-1. Ayarlar sayfasına gidin
-2. Aşağıdaki bilgileri girin:
+1. Go to the Settings page
+2. Enter the following information:
 
-| Alan | Açıklama |
-|------|----------|
+| Field | Description |
+|-------|-------------|
 | **Supabase URL** | `https://YOUR_PROJECT.supabase.co` |
 | **Supabase Key** | Anon/Public key (Dashboard > Settings > API) |
-| **OpenAI API Key** | (Opsiyonel) AI analiz için |
+| **OpenAI API Key** | (Optional) For AI analysis |
 
-3. "Kaydet & Yenile" butonuna tıklayın
+3. Click "Save & Refresh"
 
-## 📱 Özellikler
+**Quick Setup via URL:**
+You can auto-configure by adding parameters to the URL:
+```
+https://yourdomain.com/?sburl=YOUR_URL&sbkey=YOUR_KEY&aikey=YOUR_AI_KEY
+```
 
-- ✅ PWA - Ana ekrana eklenebilir
-- ✅ Mobil responsive tasarım
-- ✅ iPhone notch/safe-area desteği
-- ✅ Parmakla kaydırarak sekme geçişi
-- ✅ Canlı fiyat takibi (Supabase)
-- ✅ AI portföy analizi (OpenAI)
+## 📱 Features
+
+- ✅ PWA - Add to home screen
+- ✅ Mobile responsive design
+- ✅ iPhone notch/safe-area support
+- ✅ Swipe gesture navigation
+- ✅ Live price tracking (Supabase)
+- ✅ AI portfolio analysis (OpenAI)
 - ✅ Excel/CSV export
 
-## 🔒 Güvenlik
+## 🔒 Security
 
-Bu repo'da **hiçbir hardcoded API key bulunmamaktadır**.  
-Tüm API bilgileri kullanıcı tarafından Ayarlar'dan girilir ve tarayıcının localStorage'ında saklanır.
+This repository contains **NO hardcoded API keys**.  
+All API credentials are entered by the user in Settings and stored in the browser's localStorage.
 
-## 📁 Dosya Yapısı
+## 📁 File Structure
 
 ```
-portföy/
-├── index.html      # Ana uygulama (tek dosya)
+portfolio/
+├── index.html      # Main application (single file)
 ├── manifest.json   # PWA manifest
 ├── sw.js           # Service Worker
 ├── icon-192.png    # PWA icon
 ├── icon-512.png    # PWA icon
-└── README.md       # Bu dosya
+└── README.md       # This file
 ```
 
-## 📝 Lisans
+## 📝 License
 
-Private - Tüm hakları saklıdır.
+Private - All rights reserved.
