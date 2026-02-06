@@ -1018,7 +1018,6 @@
 
                         if (!response.ok) throw new Error("API Auth/Network Error " + response.status);
                         dbData = await response.json();
-                        document.getElementById('demo-badge').classList.remove('show');
 
                     } catch (fetchErr) {
                         console.warn("API Fail:", fetchErr);
@@ -1768,9 +1767,9 @@
 
             // --- PRICE ALERT LOGIC (PHASE 4) ---
             checkAlerts: function () {
-                this.assets.forEach(a => {
+                window.Data.assets.forEach(a => {
                     if (a.alertPrice && a.alertPrice > 0) {
-                        const current = this.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                        const current = window.Data.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
                         // Trigger only if price >= alert AND alert not handled this session
                         if (current >= a.alertPrice && !a.alertTriggered) {
                             window.UI.toast(`🔔 ALARM: ${a.symbol} Hedef Fiyata Ulaştı! (${current})`, false); // false = red/attention
