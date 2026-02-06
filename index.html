@@ -52,6 +52,63 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Style number input spinners */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 100%;
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            cursor: pointer;
+            opacity: 1;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        /* Custom +/- buttons for number inputs */
+        .inp-number-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .inp-number-wrap .inp {
+            padding-right: 80px;
+        }
+
+        .inp-number-wrap .num-btns {
+            position: absolute;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .inp-number-wrap .num-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .inp-number-wrap .num-btn:active {
+            transform: scale(0.95);
+        }
+
         body {
             background: var(--bg);
             color: var(--text);
@@ -657,11 +714,23 @@
             <div style="display:flex; gap:10px;">
                 <div style="flex:1">
                     <label style="font-size:11px; color:#888;">ADET</label>
-                    <input type="number" id="inp-qty" class="inp" placeholder="Adet (Borç için -)">
+                    <div class="inp-number-wrap">
+                        <input type="number" id="inp-qty" class="inp" placeholder="Adet">
+                        <div class="num-btns">
+                            <button type="button" class="num-btn" onclick="stepInput('inp-qty', -1)">−</button>
+                            <button type="button" class="num-btn" onclick="stepInput('inp-qty', 1)">+</button>
+                        </div>
+                    </div>
                 </div>
                 <div style="flex:1">
                     <label style="font-size:11px; color:#888;">MALİYET</label>
-                    <input type="number" id="inp-cost" class="inp" placeholder="0.00">
+                    <div class="inp-number-wrap">
+                        <input type="number" id="inp-cost" class="inp" placeholder="0.00">
+                        <div class="num-btns">
+                            <button type="button" class="num-btn" onclick="stepInput('inp-cost', -0.1)">−</button>
+                            <button type="button" class="num-btn" onclick="stepInput('inp-cost', 0.1)">+</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -712,6 +781,13 @@
 
     <script>
         console.log("🚀 Uygulama 3.0 Başlatılıyor...");
+
+        // Helper for custom +/- buttons
+        function stepInput(id, step) {
+            const inp = document.getElementById(id);
+            const current = parseFloat(inp.value) || 0;
+            inp.value = (current + step).toFixed(step < 1 && step > -1 ? 2 : 0);
+        }
 
         window.DB_KEY = 'v33_assets';
         window.HIST_KEY = 'v33_history';
