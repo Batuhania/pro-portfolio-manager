@@ -1,43 +1,47 @@
-# ProPortfoy (v5) 🚀
+# Pro Portfolio Manager
 
-A robust, privacy-focused Portfolio Tracking Dashboard powered by Python automation and Modern Web Technologies.
+Kişisel portföy takip uygulaması - PWA destekli, mobil uyumlu.
 
-## Features
+## 🚀 Kurulum
 
-- **Hybrid Asset Tracking:** Stocks (BIST), Crypto, Gold, Forex, Funds, and Fixed Assets (Car, Real Estate).
-- **Automated Data:** Python script (`main.py`) fetches real-time data from financial sources.
-- **Privacy First:** Data is stored locally in your browser (`localStorage`). No external database required for portfolio data.
-- **Analysis Tools:**
-    - **Interactive Charts:** Asset distribution (Pie) and History (Line).
-    - **Profit/Loss:** Real-time P/L calculation + Unrealized Gains.
-    - **Dividend Calendar:** Tracking upcoming dividends.
-- **Mobile Ready:** Progressive Web App (PWA) support for iOS & Android.
+1. Ayarlar sayfasına gidin
+2. Aşağıdaki bilgileri girin:
 
-## Installation
+| Alan | Açıklama |
+|------|----------|
+| **Supabase URL** | `https://YOUR_PROJECT.supabase.co` |
+| **Supabase Key** | Anon/Public key (Dashboard > Settings > API) |
+| **OpenAI API Key** | (Opsiyonel) AI analiz için |
 
-### 1. Web App (Frontend)
-Simply open `index.html` (formerly `v5_robotlu.html`) in any modern browser. 
-*(No server required for basic usage)*
+3. "Kaydet & Yenile" butonuna tıklayın
 
-### 2. Python Robot (Backend Data)
- To enable automatic price updates:
+## 📱 Özellikler
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+- ✅ PWA - Ana ekrana eklenebilir
+- ✅ Mobil responsive tasarım
+- ✅ iPhone notch/safe-area desteği
+- ✅ Parmakla kaydırarak sekme geçişi
+- ✅ Canlı fiyat takibi (Supabase)
+- ✅ AI portföy analizi (OpenAI)
+- ✅ Excel/CSV export
 
-# Run the robot
-python main.py
+## 🔒 Güvenlik
+
+Bu repo'da **hiçbir hardcoded API key bulunmamaktadır**.  
+Tüm API bilgileri kullanıcı tarafından Ayarlar'dan girilir ve tarayıcının localStorage'ında saklanır.
+
+## 📁 Dosya Yapısı
+
+```
+portföy/
+├── index.html      # Ana uygulama (tek dosya)
+├── manifest.json   # PWA manifest
+├── sw.js           # Service Worker
+├── icon-192.png    # PWA icon
+├── icon-512.png    # PWA icon
+└── README.md       # Bu dosya
 ```
 
-*Note: Create a `.env` file with your `SUPABASE_URL` and `SUPABASE_KEY` if using cloud sync features.*
+## 📝 Lisans
 
-## Tech Stack
-
-- **Frontend:** Vanilla JS, Chart.js, PWA (Manifest/SW).
-- **Backend:** Python (yfinance, supabase-py).
-- **Storage:** LocalStorage + Supabase (Optional).
-
-## License
-
-MIT License. Free to use and modify.
+Private - Tüm hakları saklıdır.

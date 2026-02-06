@@ -1228,6 +1228,34 @@
         window.App = {
             init: async function () {
                 console.log("🏁 App.init() (v3) Çalıştı");
+
+                // --- URL PARAMETER AUTO-CONFIG ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramUrl = urlParams.get('sburl');
+                const paramKey = urlParams.get('sbkey');
+                const paramAi = urlParams.get('aikey');
+
+                if (paramUrl || paramKey) {
+                    // Save to localStorage and update window vars
+                    if (paramUrl) {
+                        localStorage.setItem('SB_URL', paramUrl);
+                        window.SB_URL = paramUrl;
+                    }
+                    if (paramKey) {
+                        localStorage.setItem('SB_USER_KEY', paramKey);
+                        window.Data.userKey = paramKey;
+                    }
+                    if (paramAi) {
+                        localStorage.setItem('OPENAI_KEY', paramAi);
+                        window.Data.openaiKey = paramAi;
+                    }
+
+                    // Clean URL (remove params for security)
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    console.log('✅ URL parametrelerinden ayarlar yüklendi');
+                }
+                // --- END URL PARAM CONFIG ---
+
                 window.UI.initSearch();
                 window.UI.initSim();
 
