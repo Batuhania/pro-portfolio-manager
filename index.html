@@ -74,32 +74,24 @@
 
         /* Custom +/- buttons for number inputs */
         .inp-number-wrap {
-            position: relative;
             display: flex;
-            align-items: center;
-        }
-
-        .inp-number-wrap .inp {
-            padding-right: 80px;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .inp-number-wrap .num-btns {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
             display: flex;
-            gap: 5px;
+            gap: 8px;
         }
 
         .inp-number-wrap .num-btn {
-            width: 32px;
-            height: 32px;
+            flex: 1;
+            height: 36px;
             background: var(--primary);
             border: none;
             border-radius: 8px;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
@@ -108,7 +100,8 @@
         }
 
         .inp-number-wrap .num-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.97);
+            opacity: 0.9;
         }
 
         body {
