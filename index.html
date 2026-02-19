@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pro Portfolio Manager</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('✅ Service Worker Hazır'))
+                .catch(err => console.error('❌ Service Worker Hatası:', err));
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* --- CORE STYLES --- */
+        :root {
+            --bg: #050505;
+            --card: #151515;
+            --border: #252525;
+            --primary: #2962FF;
+            --green: #00E676;
+            --red: #FF1744;
+            --gold: #FFD700;
+            --purple: #D05CE3;
+            --text: #FFF;
+            --sub: #888;
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Style number input spinners */
+        /* Style number input spinners - FORCE HIDE */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+            display: none !important;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Custom +/- buttons for number inputs */
+        .inp-number-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .inp-number-wrap .num-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .inp-number-wrap .num-btn {
+            flex: 1;
+            height: 36px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .inp-number-wrap .num-btn:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .view-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* COLORS */
+        .c-green {
+            color: var(--green);
+        }
+
+        .c-red {
+            color: var(--red);
+        }
+
+        /* --- TICKER --- */
+        .ticker-wrap {
+            width: 100%;
+            height: 32px;
+            background: #080808;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker-move {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+            padding-left: 100%;
+        }
+
+        .t-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 40px;
+            font-size: 11px;
+            color: #aaa;
+            font-weight: 600;
+        }
+
+        .t-val {
+            color: #fff;
+            margin-left: 6px;
+            font-family: 'JetBrains Mono';
+            font-weight: 700;
+        }
+
+        @keyframes ticker {
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+
+            100% {
+                transform: translate3d(-100%, 0, 0);
+            }
+        }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(20, 20, 30, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .total-val {
+            font-size: 38px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin: 5px 0;
+            text-shadow: 0 4px 20px rgba(41, 98, 255, 0.2);
+        }
+
+        .pnl-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+
+        /* CHIPS */
+        .filter-scroll {
+            padding: 10px 20px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            background: #000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .filter-chip.active {
+            background: var(--text);
+            color: #000;
+            border-color: #fff;
+        }
+
+        /* LIST */
+        .list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 100px;
+        }
+
+        .asset-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .asset-item:active {
+            background: #1a1a1a;
+        }
+
+        .icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: #ddd;
+            border: 1px solid #333;
+        }
+
+        /* BADGES */
+        .badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        .b-crypto {
+            color: #FFA726;
+            background: rgba(255, 167, 38, 0.15);
+        }
+
+        .b-stock {
+            color: #29B6F6;
+            background: rgba(41, 182, 246, 0.15);
+        }
+
+        .b-gold {
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .b-fx {
+            color: var(--purple);
+            background: rgba(208, 92, 227, 0.15);
+        }
+
+        /* TOAST */
+        .toast-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(30, 30, 30, 0.95);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* SETTINGS & MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .sheet {
+            background: #1a1a1a;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 24px 24px 0 0;
+            padding: 25px;
+            border-top: 1px solid var(--border);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .inp {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            padding: 16px;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .api-box {
+            background: #222;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        /* NAV & FAB */
+        .btm-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            border-top: 1px solid var(--border);
+            display: flex;
+            height: calc(80px + env(safe-area-inset-bottom));
+            padding-top: 10px;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 90;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .nav-btn.active {
+            color: var(--primary);
+        }
+
+        .nav-btn i {
+            font-size: 22px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: calc(95px + env(safe-area-inset-bottom));
+            right: 20px;
+            width: 64px;
+            height: 64px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 8px 30px rgba(41, 98, 255, 0.4);
+            z-index: 95;
+        }
+
+        .sug-list {
+            background: #222;
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 0 0 12px 12px;
+            margin-top: -15px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .sug-item {
+            padding: 12px;
+            border-bottom: 1px solid #333;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* --- RESPONSIVE - TABLET --- */
+        @media (min-width: 768px) {
+            .header {
+                max-width: 700px;
+                margin: 0 auto;
+                border-radius: 0 0 20px 20px;
+            }
+
+            .filter-scroll {
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            #asset-list {
+                max-width: 700px;
+                margin: 0 auto;
+            }
+
+            .btm-nav {
+                max-width: 500px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 20px 20px 0 0;
+            }
+
+            .fab {
+                right: calc(50% - 280px);
+            }
+
+            .sheet {
+                max-width: 500px;
+            }
+        }
+
+        /* --- RESPONSIVE - DESKTOP --- */
+        @media (min-width: 1024px) {
+            .header {
+                max-width: 800px;
+            }
+
+            .filter-scroll {
+                max-width: 800px;
+            }
+
+            #asset-list {
+                max-width: 800px;
+            }
+
+            .total-val {
+                font-size: 48px;
+            }
+
+            .asset-item {
+                padding: 20px 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen"
+        style="position:fixed; inset:0; z-index:9999; background:#050505; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: opacity 0.5s ease;">
+        <div style="width:80px; height:80px; margin-bottom:20px;">
+            <svg viewBox="0 0 512 512" style="width:100%; height:100%;">
+                <defs>
+                    <linearGradient id="sl" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#1a47cc" />
+                        <stop offset="100%" stop-color="#448AFF" />
+                    </linearGradient>
+                </defs>
+                <rect width="512" height="512" rx="96" fill="#0a0a1a" />
+                <polyline points="80,380 160,320 240,340 310,240 380,180 432,140" fill="none" stroke="url(#sl)"
+                    stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                    <animate attributeName="stroke-dasharray" from="0 1000" to="1000 0" dur="1.2s" fill="freeze" />
+                </polyline>
+                <circle cx="432" cy="140" r="8" fill="#2962FF" opacity="0">
+                    <animate attributeName="opacity" from="0" to="1" begin="0.8s" dur="0.4s" fill="freeze" />
+                </circle>
+            </svg>
+        </div>
+        <div style="font-size:18px; font-weight:800; color:#fff; letter-spacing:1px;">Pro Portfolio</div>
+        <div style="font-size:11px; color:#555; margin-top:6px;">Portföyünüz yükleniyor...</div>
+    </div>
+
+    <!-- ONBOARDING MODAL -->
+    <div id="onboarding-modal"
+        style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.92); justify-content:center; align-items:center; padding:20px;">
+        <div
+            style="background:#1a1a1a; border-radius:20px; padding:30px; max-width:360px; width:100%; border:1px solid #333; text-align:center;">
+            <div style="font-size:40px; margin-bottom:15px;">📊</div>
+            <h2 style="font-size:20px; font-weight:800; color:#fff; margin-bottom:10px;">Hoş Geldin!</h2>
+            <p style="font-size:13px; color:#888; line-height:1.6; margin-bottom:20px;">
+                Portföyüne varlık ekleyerek başla.<br>
+                BIST hisseleri, kripto, altın, döviz ve<br>
+                özel varlıkları takip edebilirsin.
+            </p>
+            <div style="background:#111; border-radius:12px; padding:15px; margin-bottom:20px; text-align:left;">
+                <div style="font-size:11px; color:#aaa; margin-bottom:8px;">İLK ADIMLAR:</div>
+                <div style="font-size:12px; color:#ccc; margin-bottom:6px;">1️⃣ Ayarlar'dan Supabase API bilgilerini gir
+                </div>
+                <div style="font-size:12px; color:#ccc; margin-bottom:6px;">2️⃣ <span
+                        style="color:var(--primary); font-weight:700;">+</span> butonuyla ilk varlığını ekle</div>
+                <div style="font-size:12px; color:#ccc;">3️⃣ Analiz sekmesinden portföyünü değerlendir</div>
+            </div>
+            <button
+                onclick="document.getElementById('onboarding-modal').style.display='none'; localStorage.setItem('v33_onboarded','1');"
+                class="btn-primary" style="padding:14px; font-size:14px;">Başlayalım! 🚀</button>
+        </div>
+    </div>
+
+    <div id="pull-indicator"
+        style="display:none; text-align:center; padding:12px; color:#888; font-size:11px; background:#111;">
+        <i class="fas fa-sync-alt fa-spin" style="margin-right:6px;"></i>Güncelleniyor...
+    </div>
+
+    <!-- OFFLINE BANNER -->
+    <div id="offline-banner"
+        style="display:none; align-items:center; justify-content:center; gap:8px; padding:8px; background:linear-gradient(90deg, #1a0a00, #2a1000); border-bottom:1px solid #FF6D00; font-size:11px; color:#FF9800; font-weight:600;">
+        <i class="fas fa-wifi" style="opacity:0.7;"></i>
+        <span>Çevrimdışı mod — son bilinen fiyatlar gösteriliyor</span>
+    </div>
+
+    <div id="view-portfolio" class="view-section" style="display:flex;">
+
+        <div class="ticker-wrap">
+            <div class="ticker-move" id="ticker-content">
+                <span class="t-item">Piyasa Verileri Yükleniyor...</span>
+            </div>
+        </div>
+
+        <div class="header">
+            <div style="display:flex; justify-content:space-between;">
+                <div style="font-size:11px; font-weight:700; color:var(--sub);">
+                    TOPLAM VARLIK
+                    <span id="currency-label" onclick="window.UI.toggleCurrency()"
+                        style="cursor:pointer; background:#222; padding:1px 6px; border-radius:4px; margin-left:5px; font-size:9px; color:var(--primary);">TRY</span>
+                </div>
+                <div onclick="window.UI.togglePrivacy()" style="cursor:pointer; color:var(--sub);">
+                    <i class="fas fa-eye" id="eye-icon"></i>
+                </div>
+            </div>
+
+            <div class="total-val mono" id="ui-total">₺0.00</div>
+            <div id="ui-total-alt" style="font-size:11px; color:#555; margin-top:-2px; display:none;"></div>
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                <div id="ui-pnl-wrap" class="pnl-badge" style="background:#222; color:#555;">
+                    <span class="mono">--</span>
+                </div>
+                <div style="font-size:10px; color:#555; text-align:right;">
+                    <span id="asset-count" style="color:var(--primary)">0 Varlık</span>
+                    <span id="last-update" style="color:#444; margin-left:6px; font-size:9px;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily P&L Card -->
+        <div id="daily-pnl-card"
+            style="margin:0 15px 10px; background:#1a1a1a; border-radius:12px; border:1px solid #222; padding:12px 15px; display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:9px; color:#888; margin-bottom:2px;">BÜGÜN</div>
+                    <span id="daily-pnl-value" class="mono" style="font-size:16px; font-weight:800;">--</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:9px; color:#888; margin-bottom:2px;">EN İYİ / EN KÖTÜ</div>
+                    <span id="daily-best-worst" style="font-size:11px;">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-scroll">
+            <div class="filter-chip active" onclick="window.App.filter('ALL', this)">Tümü</div>
+            <div class="filter-chip" onclick="window.App.filter('STOCK', this)">BIST</div>
+            <div class="filter-chip" onclick="window.App.filter('CRYPTO', this)">Kripto</div>
+            <div class="filter-chip" onclick="window.App.filter('GOLD', this)">Emtia</div>
+            <div class="filter-chip" onclick="window.App.filter('FX', this)">Döviz</div>
+        </div>
+
+        <div id="asset-list" class="list-container"></div>
+    </div>
+
+    <div id="view-analysis" class="view-section" style="display:none;">
+        <div class="header">
+            <h2>Detaylı Analiz</h2>
+        </div>
+        <div style="padding:20px; overflow-y:auto; flex:1; padding-bottom:120px;">
+
+            <!-- PIE CHART SECTION -->
+            <div
+                style="background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333; margin-bottom:20px;">
+                <h4 style="font-size:14px; color:#fff; margin-bottom:10px;">Varlık Dağılımı</h4>
+                <div style="height:200px; position:relative;">
+                    <canvas id="anl-pie"></canvas>
+                </div>
+            </div>
+
+            <!-- AI SECTION -->
+            <div
+                style="background: linear-gradient(135deg, #1e1e2f 0%, #151520 100%); border:1px solid #333; border-radius:12px; padding:15px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="font-size:14px; color:#fff;"><i class="fas fa-robot"
+                            style="color:var(--purple); margin-right:5px;"></i> AI Asistan</h4>
+                    <button onclick="window.Data.askAI()"
+                        style="background:var(--purple); color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700;">YORUMLA</button>
+                </div>
+                <div id="ai-result" style="font-size:12px; color:#ccc; line-height:1.5; min-height:20px;">
+                    <span style="color:#666; font-style:italic;">Yapay zeka yorumu için butona basın. (Token tasarrufu:
+                        Manuel çalışır)</span>
+                </div>
+            </div>
+
+            <!-- STATS CARDS -->
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <div
+                    style="flex:1; background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333; text-align:center;">
+                    <div style="font-size:10px; color:#888;">RİSK PUANI</div>
+                    <div id="anl-risk" class="mono" style="font-size:24px; font-weight:800; color:white;">--</div>
+                    <div style="font-size:9px; color:#555;">(0-10)</div>
+                </div>
+                <div
+                    style="flex:1; background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333; text-align:center;">
+                    <div style="font-size:10px; color:#888;">HAFTALIK DEĞ.</div>
+                    <div id="anl-w1" class="mono" style="font-size:20px; font-weight:800;">--</div>
+                </div>
+            </div>
+
+            <!-- Advanced Financial Metrics -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                <div
+                    style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid #333; text-align:center;">
+                    <div style="font-size:9px; color:#888; margin-bottom:4px;">KAZANÇ KALİTESİ</div>
+                    <div id="anl-sharpe" class="mono" style="font-size:18px; font-weight:800; color:white;">--</div>
+                    <div style="font-size:8px; color:#555;">Aldığın riske değer mi?</div>
+                </div>
+                <div
+                    style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid #333; text-align:center;">
+                    <div style="font-size:9px; color:#888; margin-bottom:4px;">EN KÖTÜ DÜŞÜŞ</div>
+                    <div id="anl-mdd" class="mono" style="font-size:18px; font-weight:800; color:var(--red);">--</div>
+                    <div style="font-size:8px; color:#555;">Portföyün en çok ne kadar düştü?</div>
+                </div>
+                <div
+                    style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid #333; text-align:center;">
+                    <div style="font-size:9px; color:#888; margin-bottom:4px;">DALGALANMA</div>
+                    <div id="anl-vol" class="mono" style="font-size:18px; font-weight:800; color:#4FC3F7;">--</div>
+                    <div style="font-size:8px; color:#555;">Değer ne kadar iniş çıkış yapıyor?</div>
+                </div>
+                <div
+                    style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid #333; text-align:center;">
+                    <div style="font-size:9px; color:#888; margin-bottom:4px;">DAĞILIM DENGESİ</div>
+                    <div id="anl-hhi" class="mono" style="font-size:18px; font-weight:800; color:white;">--</div>
+                    <div id="anl-hhi-label" style="font-size:8px; color:#555;">Yumurtalar tek sepette mi?</div>
+                </div>
+            </div>
+
+            <!-- HEATMAP -->
+            <h4 style="margin-bottom:10px; font-size:12px; color:#888;">SEKTÖR ISI HARİTASI</h4>
+            <div id="heatmap-container" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:30px;">
+                <!-- JS will populate -->
+                <div
+                    style="width:100%; padding:20px; text-align:center; color:#555; background:#111; border-radius:8px;">
+                    Veri Bekleniyor...</div>
+            </div>
+
+            <h4 style="margin-bottom:15px; font-size:12px; color:#888;">DAĞILIM (PASTA)</h4>
+            <div style="height:250px; margin-bottom:30px;">
+                <canvas id="chart-allocation"></canvas>
+            </div>
+
+            <div style="border-top:1px solid #222; padding-top:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h4 style="font-size:12px; color:#888; margin:0;">BÜYÜME (GEÇMİŞ)</h4>
+                    <div id="history-range-btns" style="display:flex; gap:4px;">
+                        <button onclick="window.UI.setHistRange(7, this)" class="range-btn"
+                            style="padding:3px 8px; font-size:9px; background:#333; border:none; color:#aaa; border-radius:4px; cursor:pointer;">1H</button>
+                        <button onclick="window.UI.setHistRange(30, this)" class="range-btn active"
+                            style="padding:3px 8px; font-size:9px; background:var(--primary); border:none; color:#000; border-radius:4px; cursor:pointer; font-weight:700;">1A</button>
+                        <button onclick="window.UI.setHistRange(90, this)" class="range-btn"
+                            style="padding:3px 8px; font-size:9px; background:#333; border:none; color:#aaa; border-radius:4px; cursor:pointer;">3A</button>
+                        <button onclick="window.UI.setHistRange(0, this)" class="range-btn"
+                            style="padding:3px 8px; font-size:9px; background:#333; border:none; color:#aaa; border-radius:4px; cursor:pointer;">TÜM</button>
+                    </div>
+                </div>
+                <div style="height:200px; margin-bottom:30px;">
+                    <canvas id="chart-history"></canvas>
+                </div>
+            </div>
+
+            <!-- EXTRAS (PHASE 3) -->
+            <div style="border-top:1px solid #222; padding-top:20px;">
+                <h4 style="margin-bottom:15px; font-size:12px; color:#888;">EKONOMİ & KIYASLAMA</h4>
+
+                <!-- 1. Real Return -->
+                <div
+                    style="background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333; margin-bottom:15px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="font-size:11px; color:#aaa;">Enflasyona Karşı Kazancın</span>
+                        <span id="anl-real-ret" class="mono" style="font-size:12px; font-weight:700;">--</span>
+                    </div>
+                    <div style="height:6px; background:#333; border-radius:3px; overflow:hidden;">
+                        <div id="anl-real-bar" style="width:50%; height:100%; background:#555;"></div>
+                    </div>
+                    <div style="font-size:9px; color:#666; margin-top:5px; text-align:right;">Enflasyon %<span
+                            id="anl-inflation-rate">--</span> — Ayrıntı için Ayarlar’dan değiştir</div>
+                </div>
+
+                <!-- 2. Benchmark -->
+                <div
+                    style="background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333; margin-bottom:15px;">
+                    <h5 style="font-size:11px; color:#aaa; margin-bottom:10px;">BU HAFTA KİM KAZANDI?</h5>
+                    <div id="anl-bench" style="display:flex; flex-direction:column; gap:8px;">
+                        <!-- JS populated -->
+                    </div>
+                </div>
+
+                <!-- 3. Dividends -->
+                <div style="background:#1a1a1a; padding:15px; border-radius:12px; border:1px solid #333;">
+                    <h5 style="font-size:11px; color:#aaa; margin-bottom:10px;">YAKLAŞAN TEMETTÜLER</h5>
+                    <div style="font-size:9px; color:#555; margin-bottom:8px;">Hisselerinden beklenen tahmini temettü
+                        ödemeleri</div>
+                    <div id="anl-divs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-settings" class="view-section" style="display:none;">
+        <div class="header">
+            <h2>Ayarlar</h2>
+        </div>
+        <div style="padding:20px; flex:1; overflow-y:auto; padding-bottom:120px;">
+            <div class="api-box">
+                <label style="font-size:11px; color:#aaa; display:block; margin-bottom:5px;">SUPABASE URL</label>
+                <input type="text" id="inp-sb-url" class="inp" placeholder="https://xxxxx.supabase.co"
+                    style="font-size:11px;" onblur="window.Data.autoSaveSettings()">
+
+                <div style="height:10px;"></div>
+
+                <label style="font-size:11px; color:#aaa; display:block; margin-bottom:5px;">SUPABASE KEY
+                    (ANON/PUBLIC)</label>
+                <input type="text" id="inp-api-key" class="inp" placeholder="eyJhbGci..." style="font-size:11px;"
+                    onblur="window.Data.autoSaveSettings()">
+
+                <div style="height:10px;"></div>
+
+                <label style="font-size:11px; color:#aaa; display:block; margin-bottom:5px;">OPENAI API KEY
+                    (OPSİYONEL)</label>
+                <input type="password" id="inp-ai-key" class="inp" placeholder="sk-..." style="font-size:11px;"
+                    onblur="window.Data.autoSaveSettings()">
+
+                <div style="height:10px;"></div>
+
+                <label style="font-size:11px; color:#aaa; display:block; margin-bottom:5px;">YILLIK ENFLASYON ORANI
+                    (%)</label>
+                <input type="number" id="inp-inflation" class="inp" placeholder="Örn: 45" style="font-size:11px;"
+                    value="" onblur="window.Data.autoSaveSettings()">
+                <div style="font-size:9px; color:#555; margin-top:3px;">Reel getiri hesaplamasında kullanılır. Boş
+                    bırakılırsa %45 varsılır.</div>
+
+                <div id="settings-status" style="margin-top:10px; font-size:10px; color:#555;"></div>
+
+                <button class="btn-primary" onclick="window.Data.saveKeys()"
+                    style="padding:12px; font-size:13px; margin-top:10px;">Kaydet & Yenile</button>
+            </div>
+
+            <button class="btn-primary" onclick="window.Data.backup()">Yedek İndir</button>
+
+            <label class="btn-primary"
+                style="margin-top:10px; background:#1a6b3c; text-align:center; cursor:pointer; display:block;">
+                <i class="fas fa-upload" style="margin-right:6px;"></i>Yedek Yükle (JSON)
+                <input type="file" accept=".json" onchange="window.Data.restoreBackup(event)" style="display:none;">
+            </label>
+
+            <button class="btn-primary" style="margin-top:10px; background:#222; border:1px solid #333;"
+                onclick="window.Data.exportCSV()">Excel Aktar</button>
+            <button class="btn-primary" onclick="if(confirm('Veriler silinsin mi?')) window.Data.wipe()"
+                style="background:var(--red); margin-top:20px;">Sıfırla</button>
+        </div>
+    </div>
+
+    <div class="toast-container">
+        <div id="toast" class="toast">
+            <i class="fas fa-check-circle" style="color:var(--green)"></i>
+            <span id="toast-msg">İşlem Başarılı</span>
+        </div>
+    </div>
+
+    <nav class="btm-nav">
+        <div class="nav-btn active" onclick="window.UI.tab('portfolio')"><i class="fas fa-wallet"></i>Portföy</div>
+        <div class="nav-btn" onclick="window.UI.tab('analysis')"><i class="fas fa-chart-pie"></i>Analiz</div>
+        <div class="nav-btn" onclick="window.UI.tab('settings')"><i class="fas fa-cog"></i>Ayarlar</div>
+    </nav>
+
+    <div class="fab" onclick="window.UI.openAdd()"><i class="fas fa-plus"></i></div>
+
+    <div class="modal-overlay" id="modal-form">
+        <div class="sheet">
+            <h3>Ekle / Düzenle</h3>
+            <div id="asset-detail-card"
+                style="display:none; background:#111; border:1px solid #333; border-radius:10px; padding:12px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="font-size:10px; color:#888;">Güncel Değer</span>
+                    <span id="detail-value" class="mono" style="font-size:13px; font-weight:700; color:white;">--</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="font-size:10px; color:#888;">Kâr/Zarar</span>
+                    <span id="detail-pnl" class="mono" style="font-size:12px; font-weight:700;">--</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:10px; color:#888;">Portföy Payı</span>
+                    <span id="detail-weight" class="mono"
+                        style="font-size:12px; font-weight:700; color:var(--primary);">--</span>
+                </div>
+            </div>
+            <br>
+            <input type="text" id="inp-search" class="inp" placeholder="Ara: GLDGR, THYAO, USD..." autocomplete="off">
+            <div class="sug-list" id="sug-list"></div>
+
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1">
+                    <label style="font-size:11px; color:#888;">ADET</label>
+                    <div class="inp-number-wrap">
+                        <input type="number" id="inp-qty" class="inp" placeholder="Adet">
+                        <div class="num-btns">
+                            <button type="button" class="num-btn" onclick="stepInput('inp-qty', -1)">−</button>
+                            <button type="button" class="num-btn" onclick="stepInput('inp-qty', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex:1">
+                    <label style="font-size:11px; color:#888;">MALİYET</label>
+                    <div class="inp-number-wrap">
+                        <input type="number" id="inp-cost" class="inp" placeholder="0.00">
+                        <div class="num-btns">
+                            <button type="button" class="num-btn" onclick="stepInput('inp-cost', -0.1)">−</button>
+                            <button type="button" class="num-btn" onclick="stepInput('inp-cost', 0.1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Alert Input -->
+            <div style="margin-top:10px;">
+                <label style="font-size:11px; color:var(--gold);">🔔 HEDEF (ALARM)</label>
+                <input type="number" id="inp-alert" class="inp" placeholder="Örn: 350 (0=Kapalı)">
+            </div>
+
+            <label style="font-size:11px; color:var(--primary); display:block; margin-top:10px;">MANUEL FİYAT</label>
+            <input type="number" id="inp-manual" class="inp" placeholder="Opsiyonel">
+
+            <div id="sim-toggle"
+                style="text-align:center; margin:15px 0; color:var(--primary); font-size:12px; cursor:pointer;"
+                onclick="window.UI.toggleSim()">
+                <i class="fas fa-calculator"></i> Senaryo Hesapla
+            </div>
+
+            <div id="sim-box"
+                style="display:none; background:#222; padding:10px; border-radius:8px; margin-bottom:15px;">
+                <label style="font-size:11px; color:#888;">HEDEF FİYAT</label>
+                <input type="number" id="inp-sim-price" class="inp" placeholder="Örn: 500" style="margin-bottom:5px;">
+                <div id="sim-result" class="mono" style="font-size:12px; color:#fff;">Sonuç: --</div>
+            </div>
+
+            <div id="hist-toggle"
+                style="text-align:center; margin:5px 0 15px 0; color:var(--primary); font-size:12px; cursor:pointer;"
+                onclick="window.UI.toggleHis()">
+                <i class="fas fa-chart-line"></i> Fiyat Geçmişi / Grafik
+            </div>
+
+            <div id="hist-box"
+                style="display:none; background:#222; padding:10px; border-radius:8px; margin-bottom:15px;">
+                <div style="height:250px; position:relative; width:100%;">
+                    <canvas id="hist-chart"></canvas>
+                </div>
+                <div id="hist-table" style="margin-top:10px; font-size:11px;"></div>
+            </div>
+
+            <button class="btn-primary" onclick="window.App.save()" style="margin-top:15px;">KAYDET</button>
+            <button style="width:100%; padding:15px; background:transparent; border:none; color:#666; margin-top:5px;"
+                onclick="window.UI.closeAdd()">İptal</button>
+            <button id="btn-del" type="button"
+                style="width:100%; padding:15px; background:transparent; border:none; color:var(--red); display:none;"
+                onclick="window.App.del()">Sil</button>
+        </div>
+    </div>
+
+    <script>
+        // Pro Portfolio Manager v3.0
+
+        // Helper for custom +/- buttons
+        function stepInput(id, step) {
+            const inp = document.getElementById(id);
+            const current = parseFloat(inp.value) || 0;
+            inp.value = (current + step).toFixed(step < 1 && step > -1 ? 2 : 0);
+        }
+
+        window.DB_KEY = 'v33_assets';
+        window.HIST_KEY = 'v33_history';
+
+        // Supabase Configuration - User must enter in Settings
+        // No hardcoded keys for security
+        window.SB_URL = localStorage.getItem('SB_URL') || '';
+        window.DEFAULT_SB_KEY = '';  // Removed - User must provide via Settings
+
+        window.MASTER_LIST = [
+            { s: "THYAO", t: "STOCK", sec: "ULASTIRMA", n: "Türk Hava Yolları" },
+            { s: "EREGL", t: "STOCK", sec: "METAL", n: "Ereğli Demir Çelik" },
+            { s: "ASELS", t: "STOCK", sec: "SAVUNMA", n: "Aselsan" },
+            { s: "SISE", t: "STOCK", sec: "CAM", n: "Şişecam" },
+            { s: "BIMAS", t: "STOCK", sec: "PERAKENDE", n: "BİM Mağazalar" },
+            { s: "AKBNK", t: "STOCK", sec: "BANKA", n: "Akbank" },
+            { s: "YKBNK", t: "STOCK", sec: "BANKA", n: "Yapı Kredi" },
+            { s: "GARAN", t: "STOCK", sec: "BANKA", n: "Garanti BBVA" },
+            { s: "KCHOL", t: "STOCK", sec: "HOLDING", n: "Koç Holding" },
+            { s: "SAHOL", t: "STOCK", sec: "HOLDING", n: "Sabancı Holding" },
+            { s: "ISCTR", t: "STOCK", sec: "BANKA", n: "İş Bankası (C)" },
+            { s: "TUPRS", t: "STOCK", sec: "ENERJI", n: "Tüpraş" },
+            { s: "FROTO", t: "STOCK", sec: "OTOMOTIV", n: "Ford Otosan" },
+            { s: "TOASO", t: "STOCK", sec: "OTOMOTIV", n: "Tofaş" },
+            { s: "SASA", t: "STOCK", sec: "KIMYA", n: "SASA Polyester" },
+            { s: "HEKTS", t: "STOCK", sec: "TARIM", n: "Hektaş" },
+            { s: "PETKM", t: "STOCK", sec: "KIMYA", n: "Petkim" },
+            { s: "TCELL", t: "STOCK", sec: "ILETISIM", n: "Turkcell" },
+            { s: "TTKOM", t: "STOCK", sec: "ILETISIM", n: "Türk Telekom" },
+            { s: "ENJSA", t: "STOCK", sec: "ENERJI", n: "Enerjisa" },
+            { s: "KONTR", t: "STOCK", sec: "TEKNO", n: "Kontrolmatik" },
+            { s: "ASTOR", t: "STOCK", sec: "ENERJI", n: "Astor Enerji" },
+            { s: "GESAN", t: "STOCK", sec: "ENERJI", n: "Girişim Elektrik" },
+            { s: "SMART", t: "STOCK", sec: "ENERJI", n: "Smart Güneş" },
+            { s: "EUPWR", t: "STOCK", sec: "ENERJI", n: "Europower" },
+            { s: "ALFAS", t: "STOCK", sec: "ENERJI", n: "Alfa Solar" },
+            { s: "KOZAL", t: "STOCK", sec: "MADEN", n: "Koza Altın" },
+            { s: "KARDM", t: "STOCK", sec: "METAL", n: "Kardemir (D)" },
+            { s: "MGROS", t: "STOCK", sec: "PERAKENDE", n: "Migros" },
+            { s: "SOKM", t: "STOCK", sec: "PERAKENDE", n: "Şok Marketler" },
+            { s: "GLDGR", t: "GOLD", sec: "EMTIA", n: "Gram Altın (24K)" },
+            { s: "SLVGR", t: "GOLD", sec: "EMTIA", n: "Gram Gümüş" },
+            { s: "PLTGR", t: "GOLD", sec: "EMTIA", n: "Gram Platin" },
+            { s: "XAU", t: "GOLD", sec: "EMTIA", n: "Ons Altın ($)" },
+
+            // Nakit & Fonlar
+            { s: "TRY", t: "CASH", sec: "NAKIT", n: "Türk Lirası (Nakit)" },
+            { s: "FON", t: "FUND", sec: "FON", n: "Yatırım Fonu (Genel)" },
+
+            // Duran Varlıklar & Borçlar
+            { s: "EV", t: "REAL_ESTATE", sec: "DURAN", n: "Ev / Konut" },
+            { s: "ARABA", t: "VEHICLE", sec: "DURAN", n: "Otomobil" },
+            { s: "ARSA", t: "REAL_ESTATE", sec: "DURAN", n: "Arsa / Tarla" },
+            { s: "KREDI", t: "DEBT", sec: "BORC", n: "Kredi Borcu" },
+            { s: "KART", t: "DEBT", sec: "BORC", n: "Kredi Kartı Borcu" },
+            { s: "KITAP", t: "COLLECTION", sec: "DURAN", n: "Kütüphane / Koleksiyon" },
+            { s: "SAAT", t: "COLLECTION", sec: "DURAN", n: "Saat / Takı" },
+
+            { s: "BTC", t: "CRYPTO", sec: "KRIPTO", n: "Bitcoin" },
+            { s: "ETH", t: "CRYPTO", sec: "KRIPTO", n: "Ethereum" },
+            { s: "USDT", t: "CRYPTO", sec: "STABLE", n: "Tether" },
+            { s: "BNB", t: "CRYPTO", sec: "KRIPTO", n: "Binance Coin" },
+            { s: "SOL", t: "CRYPTO", sec: "KRIPTO", n: "Solana" },
+            { s: "XRP", t: "CRYPTO", sec: "KRIPTO", n: "Ripple" },
+            { s: "ADA", t: "CRYPTO", sec: "KRIPTO", n: "Cardano" },
+            { s: "AVAX", t: "CRYPTO", sec: "KRIPTO", n: "Avalanche" },
+            { s: "DOGE", t: "CRYPTO", sec: "MEME", n: "Dogecoin" },
+            { s: "SHIB", t: "CRYPTO", sec: "MEME", n: "Shiba Inu" },
+            { s: "DOT", t: "CRYPTO", sec: "KRIPTO", n: "Polkadot" },
+            { s: "MATIC", t: "CRYPTO", sec: "KRIPTO", n: "Polygon" },
+            { s: "LTC", t: "CRYPTO", sec: "KRIPTO", n: "Litecoin" },
+            { s: "TRX", t: "CRYPTO", sec: "KRIPTO", n: "Tron" },
+            { s: "LINK", t: "CRYPTO", sec: "KRIPTO", n: "Chainlink" },
+            { s: "ATOM", t: "CRYPTO", sec: "KRIPTO", n: "Cosmos" },
+            { s: "UNI", t: "CRYPTO", sec: "DEFI", n: "Uniswap" },
+            { s: "XLM", t: "CRYPTO", sec: "KRIPTO", n: "Stellar" },
+            { s: "PEPE", t: "CRYPTO", sec: "MEME", n: "Pepe" },
+            { s: "FET", t: "CRYPTO", sec: "AI", n: "Fetch.ai" },
+            { s: "USD", t: "FX", sec: "DOVIZ", n: "Amerikan Doları" },
+            { s: "EUR", t: "FX", sec: "DOVIZ", n: "Euro" },
+            { s: "GBP", t: "FX", sec: "DOVIZ", n: "Sterlin" },
+            { s: "CHF", t: "FX", sec: "DOVIZ", n: "İsviçre Frangı" }
+        ];
+
+        function safeParse(key, def) {
+            try { return JSON.parse(localStorage.getItem(key)) || def; }
+            catch (e) { console.warn("Reset corrupt", key); return def; }
+        }
+
+        window.Data = {
+            assets: safeParse(window.DB_KEY, []),
+            history: safeParse(window.HIST_KEY, []),
+
+
+            userKey: localStorage.getItem('SB_USER_KEY') || '',
+            openaiKey: localStorage.getItem('OPENAI_KEY') || '',
+            prices: {},
+            lastUpdated: null,
+            usdRate: 0,
+            benchmarkHistory: safeParse('v33_benchmarks', {}),
+            inflationRate: parseFloat(localStorage.getItem('INFLATION_RATE')) || 45,
+
+            save: function () { localStorage.setItem(window.DB_KEY, JSON.stringify(this.assets)); },
+
+            saveHistory: function (totalVal) {
+                const today = new Date().toISOString().split('T')[0];
+                const lastEntry = this.history[this.history.length - 1];
+                if (!lastEntry || lastEntry.d !== today) {
+                    this.history.push({ d: today, v: totalVal });
+                    if (this.history.length > 90) this.history.shift();
+                } else {
+                    lastEntry.v = totalVal;
+                }
+                localStorage.setItem(window.HIST_KEY, JSON.stringify(this.history));
+
+                // Track benchmark prices for real comparison
+                const usd = this.usdRate || 0;
+                const gold = this.prices['GLDGR'] || 0;
+                if (usd > 0 || gold > 0) {
+                    if (!this.benchmarkHistory[today]) this.benchmarkHistory[today] = {};
+                    if (usd > 0) this.benchmarkHistory[today].usd = usd;
+                    if (gold > 0) this.benchmarkHistory[today].gold = gold;
+                    // Keep max 90 days
+                    const keys = Object.keys(this.benchmarkHistory).sort();
+                    while (keys.length > 90) {
+                        delete this.benchmarkHistory[keys.shift()];
+                    }
+                    localStorage.setItem('v33_benchmarks', JSON.stringify(this.benchmarkHistory));
+                }
+            },
+
+            // --- ANALYTICS MODULE (PHASE 1) ---
+            getPeriodStats: function () {
+                if (this.history.length < 2) return { d1: { p: 0, v: 0 }, w1: { p: 0, v: 0 }, m1: { p: 0, v: 0 } };
+                const current = this.history[this.history.length - 1].v;
+
+                const findPast = (days) => {
+                    if (this.history.length <= days) return this.history[0].v;
+                    return this.history[this.history.length - 1 - days].v;
+                };
+
+                const calcP = (past) => past > 0 ? ((current - past) / past) * 100 : 0;
+                const calcV = (past) => current - past;
+
+                return {
+                    d1: { p: calcP(findPast(1)), v: calcV(findPast(1)) },
+                    w1: { p: calcP(findPast(7)), v: calcV(findPast(7)) },
+                    m1: { p: calcP(findPast(30)), v: calcV(findPast(30)) }
+                };
+            },
+
+            getRiskScore: function () {
+                // Simplified Risk Score based on allocation
+                // Crypto: 10pts, Stock: 7pts, Gold: 3pts, FX/Stable: 1pt
+                let totalRisk = 0;
+                let totalVal = 0;
+
+                this.assets.forEach(a => {
+                    const price = this.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                    let rate = 1;
+                    if (this.getType(a.symbol) === 'CRYPTO' || a.symbol === 'XAU') rate = this.usdRate;
+
+                    const val = a.qty * price * rate;
+                    totalVal += val;
+
+                    const type = this.getType(a.symbol);
+                    let riskWeight = 5;
+                    if (type === 'CRYPTO') riskWeight = (a.symbol === 'USDT' || a.symbol === 'USDC') ? 1 : 10;
+                    else if (type === 'STOCK') riskWeight = 7;
+                    else if (type === 'GOLD') riskWeight = 2;
+                    else if (type === 'FX') riskWeight = 2;
+
+                    totalRisk += (val * riskWeight);
+                });
+
+                return totalVal > 0 ? (totalRisk / totalVal) : 0;
+            },
+
+            getSectorDistribution: function () {
+                const sectors = {};
+                let total = 0;
+                this.assets.forEach(a => {
+                    const master = window.MASTER_LIST.find(m => m.s === a.symbol);
+                    const sec = master ? master.sec : 'DIGER';
+
+                    const price = this.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                    let rate = 1;
+                    if (this.getType(a.symbol) === 'CRYPTO' || a.symbol === 'XAU') rate = this.usdRate;
+                    const val = a.qty * price * rate;
+
+                    if (!sectors[sec]) sectors[sec] = 0;
+                    sectors[sec] += val;
+                    total += val;
+                });
+                return { sectors, total };
+            },
+
+            getRealReturn: function () {
+                const annualInflation = this.inflationRate;
+                const weeklyInflation = Math.pow(1 + (annualInflation / 100), 1 / 52) - 1;
+                const stats = this.getPeriodStats();
+                const portNominal = (stats.w1 && stats.w1.p ? stats.w1.p : 0) / 100;
+
+                const real = ((1 + portNominal) / (1 + weeklyInflation) - 1) * 100;
+                return real;
+            },
+
+            getBenchmark: function () {
+                const stats = this.getPeriodStats();
+                const dates = Object.keys(this.benchmarkHistory).sort();
+
+                // Calculate real weekly change for USD and Gold from stored history
+                let usdChange = 0, goldChange = 0;
+                if (dates.length >= 2) {
+                    const latest = this.benchmarkHistory[dates[dates.length - 1]];
+                    // Find entry ~7 days ago
+                    const targetIdx = Math.max(0, dates.length - 8);
+                    const past = this.benchmarkHistory[dates[targetIdx]];
+
+                    if (latest && past) {
+                        if (latest.usd && past.usd && past.usd > 0) {
+                            usdChange = ((latest.usd - past.usd) / past.usd) * 100;
+                        }
+                        if (latest.gold && past.gold && past.gold > 0) {
+                            goldChange = ((latest.gold - past.gold) / past.gold) * 100;
+                        }
+                    }
+                }
+
+                const weeklyInflation = (Math.pow(1 + (this.inflationRate / 100), 1 / 52) - 1) * 100;
+
+                return [
+                    { n: 'Portföy', v: (stats.w1 && stats.w1.p) || 0, c: ((stats.w1 && stats.w1.p) || 0) >= 0 ? 'var(--green)' : 'var(--red)' },
+                    { n: 'Dolar', v: usdChange, c: usdChange >= 0 ? '#4FC3F7' : 'var(--red)' },
+                    { n: 'Altın', v: goldChange, c: goldChange >= 0 ? 'var(--gold)' : 'var(--red)' },
+                    { n: 'Enflasyon', v: weeklyInflation, c: '#888' }
+                ].sort((a, b) => b.v - a.v);
+            },
+
+            // Sharpe Ratio: (Mean daily return - Risk-free rate) / Std dev of daily returns
+            // Annualized. Uses 3-month T-bill proxy (~45% annual in Turkey → ~0.1% daily)
+            getSharpeRatio: function () {
+                if (this.history.length < 3) return null;
+                const returns = [];
+                for (let i = 1; i < this.history.length; i++) {
+                    const prev = this.history[i - 1].v;
+                    if (prev > 0) returns.push((this.history[i].v - prev) / prev);
+                }
+                if (returns.length < 2) return null;
+
+                const mean = returns.reduce((s, r) => s + r, 0) / returns.length;
+                const variance = returns.reduce((s, r) => s + Math.pow(r - mean, 2), 0) / (returns.length - 1);
+                const stdDev = Math.sqrt(variance);
+
+                if (stdDev === 0) return null;
+
+                // Risk-free daily rate (annualized from inflation rate as proxy)
+                const rfDaily = Math.pow(1 + (this.inflationRate / 100) * 0.5, 1 / 365) - 1;
+                const sharpe = ((mean - rfDaily) / stdDev) * Math.sqrt(252); // Annualized
+                return sharpe;
+            },
+
+            // Max Drawdown: largest peak-to-trough decline in portfolio history
+            getMaxDrawdown: function () {
+                if (this.history.length < 2) return 0;
+                let peak = this.history[0].v;
+                let maxDD = 0;
+                this.history.forEach(h => {
+                    if (h.v > peak) peak = h.v;
+                    const dd = (peak - h.v) / peak;
+                    if (dd > maxDD) maxDD = dd;
+                });
+                return maxDD * 100; // as percentage
+            },
+
+            // Volatility: annualized standard deviation of daily returns
+            getVolatility: function () {
+                if (this.history.length < 3) return 0;
+                const returns = [];
+                for (let i = 1; i < this.history.length; i++) {
+                    const prev = this.history[i - 1].v;
+                    if (prev > 0) returns.push((this.history[i].v - prev) / prev);
+                }
+                if (returns.length < 2) return 0;
+
+                const mean = returns.reduce((s, r) => s + r, 0) / returns.length;
+                const variance = returns.reduce((s, r) => s + Math.pow(r - mean, 2), 0) / (returns.length - 1);
+                return Math.sqrt(variance) * Math.sqrt(252) * 100; // annualized %
+            },
+
+            // Herfindahl-Hirschman Index: measures portfolio concentration
+            // Lower HHI = better diversified. We invert to 0-100 score (100 = perfect diversification)
+            getHHI: function () {
+                let totalVal = 0;
+                const weights = [];
+                this.assets.forEach(a => {
+                    const price = this.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                    let rate = 1;
+                    if (this.getType(a.symbol) === 'CRYPTO' || a.symbol === 'XAU') rate = this.usdRate;
+                    const val = a.qty * price * rate;
+                    if (val > 0) {
+                        weights.push(val);
+                        totalVal += val;
+                    }
+                });
+
+                if (weights.length <= 1) return { score: 0, label: 'Tek Varlık' };
+
+                const hhi = weights.reduce((sum, w) => sum + Math.pow(w / totalVal, 2), 0);
+                // HHI ranges from 1/n (perfect diversification) to 1 (single asset)
+                // Normalize: score = (1 - hhi) / (1 - 1/n) * 100
+                const n = weights.length;
+                const minHHI = 1 / n;
+                const score = hhi <= minHHI ? 100 : Math.round(((1 - hhi) / (1 - minHHI)) * 100);
+
+                let label = 'Zayıf';
+                if (score >= 80) label = 'Mükemmel';
+                else if (score >= 60) label = 'İyi';
+                else if (score >= 40) label = 'Orta';
+
+                return { score, label };
+            },
+
+            getDividends: function () {
+                // Return fetched dividend data sorted by date
+                const raw = window.Data.sysDividends || [];
+                // Sort by date (name field)
+                return raw.sort((a, b) => new Date(a.name) - new Date(b.name)).map(d => {
+                    const sym = d.ticker.replace('DIV_', '').replace('.IS', ''); // Clean Ticker
+                    const dateParts = d.name.split('-');
+                    // Format Date: 20 Mayis (simplified)
+                    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+                    const mName = months[parseInt(dateParts[1]) - 1];
+                    const niceDate = `${dateParts[2]} ${mName}`;
+
+                    return { s: sym, d: niceDate, v: d.current_price > 0 ? d.current_price.toFixed(2) + ' TL' : 'Belirsiz' };
+                });
+            },
+            // -------------------------------
+
+            saveKeys: function () {
+                const sbUrl = document.getElementById('inp-sb-url').value.trim();
+                const sbk = document.getElementById('inp-api-key').value.trim();
+                const oaik = document.getElementById('inp-ai-key').value.trim();
+                const inflationVal = document.getElementById('inp-inflation').value.trim();
+
+                if (sbUrl) localStorage.setItem('SB_URL', sbUrl);
+                if (sbk) localStorage.setItem('SB_USER_KEY', sbk);
+                if (oaik) localStorage.setItem('OPENAI_KEY', oaik);
+                if (inflationVal) {
+                    localStorage.setItem('INFLATION_RATE', inflationVal);
+                    window.Data.inflationRate = parseFloat(inflationVal);
+                }
+
+                window.SB_URL = sbUrl || window.SB_URL;
+                window.Data.userKey = sbk || window.Data.userKey;
+                window.Data.openaiKey = oaik || window.Data.openaiKey;
+
+                window.UI.toast('Ayarlar Kaydedildi!', true);
+                window.Data.updateSettingsStatus();
+                window.Data.fetchAll().then(window.UI.render);
+            },
+
+            autoSaveSettings: function () {
+                const sbUrl = document.getElementById('inp-sb-url').value.trim();
+                const sbk = document.getElementById('inp-api-key').value.trim();
+                const oaik = document.getElementById('inp-ai-key').value.trim();
+                const inflationVal = document.getElementById('inp-inflation').value.trim();
+
+                if (sbUrl) { localStorage.setItem('SB_URL', sbUrl); window.SB_URL = sbUrl; }
+                if (sbk) { localStorage.setItem('SB_USER_KEY', sbk); window.Data.userKey = sbk; }
+                if (oaik) { localStorage.setItem('OPENAI_KEY', oaik); window.Data.openaiKey = oaik; }
+                if (inflationVal) {
+                    localStorage.setItem('INFLATION_RATE', inflationVal);
+                    window.Data.inflationRate = parseFloat(inflationVal);
+                }
+                window.Data.updateSettingsStatus();
+            },
+
+            updateSettingsStatus: function () {
+                const el = document.getElementById('settings-status');
+                if (!el) return;
+                const sbOk = !!window.SB_URL;
+                const keyOk = !!window.Data.userKey;
+                const aiOk = !!window.Data.openaiKey;
+                el.innerHTML = `
+                    <span style="color:${sbOk ? 'var(--green)' : 'var(--red)'};">${sbOk ? '✓' : '✗'} Supabase URL</span> · 
+                    <span style="color:${keyOk ? 'var(--green)' : 'var(--red)'};">${keyOk ? '✓' : '✗'} API Key</span> · 
+                    <span style="color:${aiOk ? 'var(--green)' : '#666'};">${aiOk ? '✓' : '—'} AI Key</span>
+                `;
+            },
+
+            restoreBackup: function (event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (!Array.isArray(data)) throw new Error('Geçersiz format');
+                        window.Data.assets = data;
+                        window.Data.save();
+                        window.UI.render();
+                        window.UI.toast(`${data.length} varlık yüklendi!`, true);
+                    } catch (err) {
+                        window.UI.toast('Yedek dosyası okunamadı: ' + err.message, false);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            },
+
+            askAI: async function () {
+                if (!this.openaiKey) return window.UI.toast('Ayarlar\'dan OpenAI Key giriniz!', false);
+
+                const resBox = document.getElementById('ai-result');
+                resBox.innerHTML = '<span class="mono" style="color:var(--purple)">⚡ Analiz yapılıyor...</span>';
+
+                try {
+                    // 1. Prepare Summary (Token Efficient)
+                    const stats = this.getPeriodStats();
+                    const risk = this.getRiskScore();
+                    const dist = this.getSectorDistribution();
+
+                    // Top 3 Holdings
+                    const top3 = this.assets
+                        .map(a => {
+                            const p = this.prices[a.symbol] || a.manualPrice || 0;
+                            const r = (this.getType(a.symbol) === 'CRYPTO' || a.symbol === 'XAU') ? this.usdRate : 1;
+                            return { s: a.symbol, v: a.qty * p * r };
+                        })
+                        .sort((a, b) => b.v - a.v)
+                        .slice(0, 3)
+                        .map(x => x.s)
+                        .join(', ');
+
+                    const prompt = `
+                        Sen bir finans uzmanısın. Şu portföy özetini 3 kısa maddede yorumla (Risk, Fırsat, Durum):
+                        - Risk Puanı: ${risk.toFixed(1)}/10
+                        - Haftalık Değişim: %${stats.w1.p.toFixed(1)}
+                        - En Büyük Varlıklar: ${top3}
+                        - Sektörler: ${Object.keys(dist.sectors).join(', ')}
+                        Kısa, öz ve motive edici konuş. Türkçe cevap ver.
+                    `;
+
+                    // 2. Call API
+                    const req = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.openaiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: "gpt-3.5-turbo",
+                            messages: [{ role: "user", content: prompt }],
+                            max_tokens: 150
+                        })
+                    });
+
+                    const data = await req.json();
+                    if (data.error) throw new Error(data.error.message);
+
+                    const answer = data.choices[0].message.content;
+                    resBox.innerHTML = answer.replace(/\n/g, '<br>');
+
+                } catch (e) {
+                    resBox.innerHTML = `<span style="color:var(--red)">Hata: ${e.message}</span>`;
+                }
+            },
+
+            getType: function (sym) {
+                const found = window.MASTER_LIST.find(x => x.s === sym);
+                if (found) return found.t;
+                if (sym.includes('USDT')) return 'CRYPTO';
+                return 'OTHER';
+            },
+
+            getDistribution: function () {
+                // Initialize groups
+                const dist = { GOLD: 0, STOCK: 0, CRYPTO: 0, CASH: 0, FUND: 0 };
+                let total = 0;
+
+                this.assets.forEach(asset => {
+                    const price = this.prices[asset.symbol] || asset.manualPrice || 0;
+                    let val = asset.qty * price;
+
+                    // Convert USD-based to TRY
+                    const type = this.getType(asset.symbol);
+                    if (type === 'CRYPTO' || asset.symbol === 'XAU') {
+                        val = asset.qty * price * (this.usdRate || 1);
+                    } else if (asset.symbol === 'USD' || asset.symbol === 'USDT') {
+                        val = asset.qty * this.usdRate;
+                    } else if (asset.symbol === 'EUR') {
+                        val = asset.qty * (this.prices['EUR'] || 0) * (this.usdRate || 1);
+                    }
+
+                    // Manual price items (custom assets)
+                    if (!price && asset.manualPrice > 0) {
+                        val = asset.qty * asset.manualPrice;
+                    }
+
+                    // Ignore Negative (Debt) for Pie
+                    if (val <= 0) return;
+
+                    total += val;
+
+                    // Map types to Pie Categories
+                    if (type === 'GOLD' || type === 'OTHER') dist.GOLD += val;
+                    else if (type === 'STOCK') dist.STOCK += val;
+                    else if (type === 'CRYPTO') dist.CRYPTO += val;
+                    else if (type === 'CASH') dist.CASH += val;
+                    else dist.FUND += val;
+                });
+
+                return { dist, total };
+            },
+
+            fetchAll: async function () {
+                try {
+                    const tick = document.getElementById('ticker-content');
+                    if (tick) tick.innerHTML = '<span class="t-item" style="color:#00E676;">⚡ Veri Çekiliyor...</span>';
+
+                    let dbData = [];
+                    let usedMock = false;
+                    let isOnline = true;
+
+                    const activeKey = window.Data.userKey || window.DEFAULT_SB_KEY;
+                    const sbUrl = window.SB_URL;
+
+                    // Try Supabase if configured
+                    if (sbUrl && activeKey) {
+                        try {
+                            const response = await fetch(`${sbUrl}/rest/v1/assets?select=*`, {
+                                method: 'GET',
+                                headers: {
+                                    'apikey': activeKey,
+                                    'Authorization': `Bearer ${activeKey}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            if (!response.ok) throw new Error("API Auth/Network Error " + response.status);
+                            dbData = await response.json();
+
+                        } catch (fetchErr) {
+                            console.warn("Supabase API Fail:", fetchErr);
+                            usedMock = true;
+                            isOnline = false;
+                            dbData = [];
+                        }
+                    } else {
+                        // No Supabase configured — skip directly to forex fallback
+                        usedMock = true;
+                    }
+
+                    if (dbData && dbData.length > 0) {
+                        window.Data.sysDividends = [];
+
+                        dbData.forEach(item => {
+                            if (item.asset_type === 'DIVIDEND_INFO') {
+                                window.Data.sysDividends.push(item);
+                                return;
+                            }
+
+                            window.Data.prices[item.ticker] = item.current_price;
+                            if (item.ticker === 'USDT') window.Data.usdRate = item.current_price;
+                        });
+                    }
+
+                    // Force TRY = 1.0
+                    window.Data.prices['TRY'] = 1.0;
+
+                    // Always try forex API for USD/TRY (works without Supabase too)
+                    if (!window.Data.usdRate || window.Data.usdRate === 0) {
+                        try {
+                            const forexResp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                            const forexData = await forexResp.json();
+                            if (forexData && forexData.rates && forexData.rates.TRY) {
+                                window.Data.usdRate = forexData.rates.TRY;
+                                window.Data.prices['USDT'] = forexData.rates.TRY;
+                                window.Data.prices['USD'] = forexData.rates.TRY;
+
+                                if (forexData.rates.EUR) {
+                                    const eurUsd = 1 / forexData.rates.EUR;
+                                    window.Data.prices['EUR'] = eurUsd * forexData.rates.TRY;
+                                }
+                                if (forexData.rates.GBP) {
+                                    window.Data.prices['GBP'] = (1 / forexData.rates.GBP) * forexData.rates.TRY;
+                                }
+                                if (forexData.rates.CHF) {
+                                    window.Data.prices['CHF'] = (1 / forexData.rates.CHF) * forexData.rates.TRY;
+                                }
+                                isOnline = true;
+                            }
+                        } catch (fxErr) {
+                            console.warn('Forex fallback failed:', fxErr);
+                            isOnline = false;
+                        }
+                    }
+
+                    // Metals manual calc
+                    if (window.Data.prices['XAU'] && window.Data.usdRate) {
+                        window.Data.prices['GLDGR'] = (window.Data.prices['XAU'] * window.Data.usdRate) / 31.1035;
+                    }
+
+                    // BIST 100
+                    if (!window.Data.prices['XU100']) {
+                        const xuKey = Object.keys(window.Data.prices).find(k => k.includes('XU100') || k.includes('BIST100'));
+                        if (xuKey) window.Data.prices['XU100'] = window.Data.prices[xuKey];
+                    }
+
+                    // --- OFFLINE PRICE CACHE ---
+                    const priceKeys = Object.keys(window.Data.prices);
+                    if (isOnline && priceKeys.length > 1) {
+                        // Save prices + timestamp for offline use
+                        localStorage.setItem('v33_cached_prices', JSON.stringify({
+                            prices: window.Data.prices,
+                            usdRate: window.Data.usdRate,
+                            ts: Date.now()
+                        }));
+                    } else if (priceKeys.length <= 1) {
+                        // Nothing from API — load cached prices
+                        try {
+                            const cached = JSON.parse(localStorage.getItem('v33_cached_prices'));
+                            if (cached && cached.prices) {
+                                window.Data.prices = { ...cached.prices, ...window.Data.prices };
+                                window.Data.usdRate = cached.usdRate || window.Data.usdRate;
+                                const age = Math.round((Date.now() - cached.ts) / 60000);
+                                if (window.UI) window.UI.toast(`Çevrimdışı mod — ${age} dk önceki fiyatlar`, false);
+                            }
+                        } catch (e) { /* no cache */ }
+                    }
+
+                    // --- OFFLINE BANNER ---
+                    const banner = document.getElementById('offline-banner');
+                    if (banner) {
+                        if (!isOnline) {
+                            banner.style.display = 'flex';
+                        } else {
+                            banner.style.display = 'none';
+                        }
+                    }
+
+                    // Toast feedback
+                    if (isOnline && !usedMock) {
+                        const count = dbData ? dbData.length : 0;
+                        if (window.UI) window.UI.toast(`Veriler Güncel${count > 0 ? ': ' + count : ''}`, true);
+                    } else if (isOnline && usedMock) {
+                        if (window.UI) window.UI.toast('Döviz kurları güncellendi', true);
+                    }
+
+                } catch (e) { console.error("FetchAll Critical:", e); }
+            },
+
+
+            backup: function () {
+                const s = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.assets));
+                const a = document.createElement('a'); a.href = s; a.download = 'yedek.json'; a.click();
+            },
+            exportCSV: function () {
+                // EXCEL BOM for UTF-8 + Semi-colon separator for region compatibility
+                let csv = "\uFEFFSembol;Tip;Adet;Maliyet;Guncel Fiyat;Toplam Deger;Kar/Zarar;Kar %\n";
+
+                this.assets.forEach(a => {
+                    const p = this.prices[a.symbol] || a.manualPrice || a.cost || 0;
+
+                    // Value Calculation
+                    let val = a.qty * p;
+                    if (a.ticker === 'USDT' || a.ticker === 'USD') val = a.qty * this.usdRate;
+                    else if (a.ticker === 'EUR') val = (a.qty * (this.prices['EUR'] || 0));
+
+                    const costTotal = a.qty * a.cost;
+                    const pl = val - costTotal;
+                    const plP = costTotal > 0 ? (pl / costTotal) * 100 : 0;
+
+                    // Formatting helper (Turkish standard: comma decimal)
+                    const fmt = (n) => n.toFixed(2).replace('.', ',');
+
+                    csv += `${a.symbol};${this.getType(a.symbol)};${a.qty};${fmt(a.cost)};${fmt(p)};${fmt(val)};${fmt(pl)};${fmt(plP)}%\n`;
+                });
+
+                const s = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+                const a = document.createElement('a'); a.href = s; a.download = 'ProPortfoy_Excel.csv'; a.click();
+            },
+            saveKeys: function () {
+                const sbUrl = document.getElementById('inp-sb-url').value.trim();
+                const sbKey = document.getElementById('inp-api-key').value.trim();
+                const aiKey = document.getElementById('inp-ai-key').value.trim();
+
+                if (sbUrl) localStorage.setItem('SB_URL', sbUrl);
+                if (sbKey) localStorage.setItem('SB_USER_KEY', sbKey);
+                if (aiKey) localStorage.setItem('OPENAI_KEY', aiKey);
+
+                window.SB_URL = sbUrl;
+                window.Data.userKey = sbKey;
+                window.Data.openaiKey = aiKey;
+
+                window.UI.toast('Ayarlar Kaydedildi!', true);
+                window.Data.fetchAll().then(window.UI.render);
+            },
+            wipe: function () { localStorage.clear(); location.reload(); }
+        };
+
+        window.editIdx = null;
+        window.chartInst = null;
+        window.histChartInst = null;
+        window.privacyMode = false;
+        window.filterMode = 'ALL';
+
+        window.App = {
+            init: async function () {
+
+
+                // --- URL PARAMETER AUTO-CONFIG ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramUrl = urlParams.get('sburl');
+                const paramKey = urlParams.get('sbkey');
+                const paramAi = urlParams.get('aikey');
+
+                if (paramUrl || paramKey) {
+                    // Save to localStorage and update window vars
+                    if (paramUrl) {
+                        localStorage.setItem('SB_URL', paramUrl);
+                        window.SB_URL = paramUrl;
+                    }
+                    if (paramKey) {
+                        localStorage.setItem('SB_USER_KEY', paramKey);
+                        window.Data.userKey = paramKey;
+                    }
+                    if (paramAi) {
+                        localStorage.setItem('OPENAI_KEY', paramAi);
+                        window.Data.openaiKey = paramAi;
+                    }
+
+                    // Clean URL (remove params for security)
+                    window.history.replaceState({}, document.title, window.location.pathname);
+
+                }
+                // --- END URL PARAM CONFIG ---
+
+                window.UI.initSearch();
+                window.UI.initSim();
+
+                // Show default settings
+                if (window.SB_URL) document.getElementById('inp-sb-url').value = window.SB_URL;
+                if (window.Data.userKey) document.getElementById('inp-api-key').value = window.Data.userKey;
+                if (window.Data.openaiKey) document.getElementById('inp-ai-key').value = window.Data.openaiKey;
+                document.getElementById('inp-inflation').value = window.Data.inflationRate;
+                window.Data.updateSettingsStatus();
+
+                window.UI.render();
+                document.getElementById('ticker-content').innerHTML = '<span class="t-item" style="color:#888;"><i class="fas fa-spinner fa-spin"></i> Fiyatlar güncelleniyor...</span>';
+
+                // Fetch with timeout protection
+                try {
+                    const fetchPromise = window.Data.fetchAll();
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000));
+                    await Promise.race([fetchPromise, timeoutPromise]);
+                } catch (err) {
+                    if (err.message === 'timeout') {
+                        window.UI.toast('Bağlantı zaman aşımına uğradı — çevrimdışı mod', false);
+                    } else {
+                        window.UI.toast('Fiyatlar yüklenemedi — çevrimdışı mod', false);
+                    }
+                }
+
+                window.App.updateTicker();
+                window.UI.checkAlerts();
+                window.UI.render();
+                window._lastUpdate = new Date();
+                window.UI.showLastUpdate();
+
+                // Remove splash screen
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.remove(), 500);
+                }
+
+                // Show onboarding for first-time users
+                if (!localStorage.getItem('v33_onboarded')) {
+                    const ob = document.getElementById('onboarding-modal');
+                    if (ob) ob.style.display = 'flex';
+                }
+
+                setInterval(async () => {
+                    try {
+                        await window.Data.fetchAll();
+                        window.UI.checkAlerts();
+                        window.UI.render();
+                        window.App.updateTicker();
+                        window._lastUpdate = new Date();
+                        window.UI.showLastUpdate();
+                    } catch (e) {
+                        console.warn('Auto-refresh failed:', e);
+                    }
+                }, 10000);
+            },
+
+            updateTicker: function () {
+                const box = document.getElementById('ticker-content');
+                let html = '';
+                const p = window.Data.prices;
+                const usd = window.Data.usdRate || 0;
+                const eurUsd = p['EUR'] || 0;
+                const xau = p['XAU'] || 0;
+                const xag = p['XAG'] || 0;
+
+                const items = [
+                    { l: 'Dolar', v: usd, fmt: 2 },
+                    { l: 'Euro', v: eurUsd > 0 && usd > 0 ? eurUsd * usd : 0, fmt: 2 },
+                    { l: 'BIST 100', v: p['XU100'] || 0, fmt: 0 },
+                    { l: 'Gram Altın', v: xau > 0 && usd > 0 ? (xau * usd / 31.1035) : (p['GLDGR'] || 0), fmt: 0 },
+                    { l: 'Gram Gümüş', v: xag > 0 && usd > 0 ? (xag * usd / 31.1035) : 0, fmt: 2 },
+                    { l: 'Bitcoin', v: p['BTC'] || 0, fmt: 0 }
+                ];
+
+                items.forEach(i => {
+                    if (i.v > 0) {
+                        const formatted = i.v.toLocaleString('tr-TR', { minimumFractionDigits: i.fmt, maximumFractionDigits: i.fmt });
+                        html += `<span class="t-item"><i class="fas fa-chart-line"></i> ${i.l} <span class="t-val">${formatted}</span></span>`;
+                    }
+                });
+                if (!html) html = '<span class="t-item">Piyasa Verileri Yükleniyor...</span>';
+                box.innerHTML = html + html + html;
+            },
+
+            filter: function (mode, el) {
+                window.filterMode = mode;
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+                window.UI.render();
+            },
+
+            save: function () {
+                const sym = document.getElementById('inp-search').value.toUpperCase();
+                const qty = parseFloat(document.getElementById('inp-qty').value) || 0;
+                const cost = parseFloat(document.getElementById('inp-cost').value) || 0;
+                const man = parseFloat(document.getElementById('inp-manual').value) || 0;
+
+                if (!sym || qty <= 0) return window.UI.toast('Sembol ve Adet giriniz', false);
+
+                const newItem = { id: Date.now(), symbol: sym, qty, cost, manualPrice: man };
+                if (window.editIdx !== null) window.Data.assets[window.editIdx] = newItem;
+                else window.Data.assets.push(newItem);
+
+                window.Data.save();
+                window.UI.closeAdd();
+                window.UI.render();
+                window.Data.fetchAll().then(window.UI.render);
+                window.UI.toast('Kaydedildi', true);
+            },
+
+            del: function () {
+                if (window.editIdx === null || window.editIdx === undefined) return;
+                if (confirm('Bu varlığı silmek istediğinize emin misiniz?')) {
+                    window.Data.assets.splice(window.editIdx, 1);
+                    window.Data.save();
+                    window.UI.closeAdd();
+                    window.UI.render();
+                    window.UI.toast('Varlık silindi', true);
+                }
+            }
+        };
+
+        window.UI = {
+            toast: function (msg, success) {
+                const t = document.getElementById('toast');
+                t.innerHTML = `<i class="fas fa-${success ? 'check-circle' : 'times-circle'}" style="color:${success ? 'var(--green)' : 'var(--red)'}"></i> ${msg}`;
+                t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), 3000);
+            },
+
+            tab: function (id) {
+                // Update view sections
+                document.querySelectorAll('.view-section').forEach(x => x.style.display = 'none');
+                document.getElementById('view-' + id).style.display = 'flex';
+
+                // Update nav button active state
+                const navBtns = document.querySelectorAll('.nav-btn');
+                navBtns.forEach(btn => btn.classList.remove('active'));
+                const tabMap = { 'portfolio': 0, 'analysis': 1, 'settings': 2 };
+                if (navBtns[tabMap[id]]) navBtns[tabMap[id]].classList.add('active');
+
+                if (id === 'analysis') {
+                    window.UI.renderAnalysis();
+                    window.UI.chart();
+                    window.UI.chartHistory(window._histRange || 30);
+                }
+            },
+
+            renderAnalysis: function () {
+                try {
+                    // 0. Render Pie Chart
+                    this.renderPieChart();
+
+                    // 1. Risk Score
+                    const risk = window.Data.getRiskScore();
+                    const rEl = document.getElementById('anl-risk');
+                    if (rEl) {
+                        rEl.innerText = risk.toFixed(1);
+                        rEl.style.color = risk < 4 ? 'var(--green)' : (risk < 7 ? 'var(--gold)' : 'var(--red)');
+                    }
+
+                    // 2. Weekly Stats
+                    const stats = window.Data.getPeriodStats();
+                    const wEl = document.getElementById('anl-w1');
+                    if (wEl && stats.w1 && typeof stats.w1.p === 'number') {
+                        const prefix = stats.w1.p >= 0 ? '+' : '';
+                        wEl.innerText = `${prefix}%${stats.w1.p.toFixed(1)}`;
+                        wEl.style.color = stats.w1.p >= 0 ? 'var(--green)' : 'var(--red)';
+                    }
+
+                    // 3. Financial Metrics with clear Turkish explanations
+                    const sharpe = window.Data.getSharpeRatio();
+                    const sharpeEl = document.getElementById('anl-sharpe');
+                    if (sharpeEl) {
+                        if (sharpe !== null) {
+                            let sharpeText, sharpeColor;
+                            if (sharpe > 1.5) { sharpeText = 'Çok İyi'; sharpeColor = 'var(--green)'; }
+                            else if (sharpe > 1) { sharpeText = 'İyi'; sharpeColor = 'var(--green)'; }
+                            else if (sharpe > 0) { sharpeText = 'Orta'; sharpeColor = 'var(--gold)'; }
+                            else { sharpeText = 'Kötü'; sharpeColor = 'var(--red)'; }
+                            sharpeEl.innerText = sharpeText;
+                            sharpeEl.style.color = sharpeColor;
+                        } else {
+                            sharpeEl.innerText = '—';
+                            sharpeEl.style.color = '#555';
+                        }
+                    }
+
+                    const mdd = window.Data.getMaxDrawdown();
+                    const mddEl = document.getElementById('anl-mdd');
+                    if (mddEl) {
+                        if (mdd === 0) {
+                            mddEl.innerText = 'Yok';
+                            mddEl.style.color = 'var(--green)';
+                        } else {
+                            mddEl.innerText = `%${mdd.toFixed(1)}`;
+                            mddEl.style.color = mdd > 10 ? 'var(--red)' : (mdd > 5 ? 'var(--gold)' : 'var(--green)');
+                        }
+                    }
+
+                    const vol = window.Data.getVolatility();
+                    const volEl = document.getElementById('anl-vol');
+                    if (volEl) {
+                        let volText, volColor;
+                        if (vol === 0) { volText = '—'; volColor = '#555'; }
+                        else if (vol < 15) { volText = 'Sakin'; volColor = '#4FC3F7'; }
+                        else if (vol < 30) { volText = 'Normal'; volColor = 'var(--gold)'; }
+                        else if (vol < 50) { volText = 'Hareketli'; volColor = '#FF9800'; }
+                        else { volText = 'Çalkantılı'; volColor = 'var(--red)'; }
+                        volEl.innerText = volText;
+                        volEl.style.color = volColor;
+                    }
+
+                    const hhi = window.Data.getHHI();
+                    const hhiEl = document.getElementById('anl-hhi');
+                    const hhiLabel = document.getElementById('anl-hhi-label');
+                    if (hhiEl) {
+                        hhiEl.innerText = hhi.label;
+                        hhiEl.style.color = hhi.score >= 60 ? 'var(--green)' : (hhi.score >= 30 ? 'var(--gold)' : 'var(--red)');
+                        if (hhiLabel) {
+                            if (hhi.score >= 60) hhiLabel.innerText = 'Dengeli dağılım 👍';
+                            else if (hhi.score >= 30) hhiLabel.innerText = 'Biraz daha çeşitlendir';
+                            else hhiLabel.innerText = 'Tüm yumurtalar tek sepette!';
+                        }
+                    }
+
+                    // 4. Heatmap — uses real P&L per sector
+                    const hm = document.getElementById('heatmap-container');
+                    if (hm) {
+                        hm.innerHTML = '';
+                        // Calculate sector P&L from cost vs current value
+                        const sectorData = {};
+                        let sectorTotal = 0;
+                        window.Data.assets.forEach(a => {
+                            const master = window.MASTER_LIST.find(m => m.s === a.symbol);
+                            const sec = master ? master.sec : 'DIGER';
+                            const price = window.Data.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                            let rate = 1;
+                            if (window.Data.getType(a.symbol) === 'CRYPTO' || a.symbol === 'XAU') rate = window.Data.usdRate;
+                            const val = a.qty * price * rate;
+                            const cost = a.qty * a.cost * (a.cost > 0 ? rate : 1);
+                            if (!sectorData[sec]) sectorData[sec] = { val: 0, cost: 0 };
+                            sectorData[sec].val += val;
+                            sectorData[sec].cost += cost;
+                            sectorTotal += val;
+                        });
+
+                        if (sectorTotal > 0) {
+                            const sectors = Object.keys(sectorData).sort((a, b) => sectorData[b].val - sectorData[a].val);
+                            sectors.forEach(sec => {
+                                const d = sectorData[sec];
+                                const share = (d.val / sectorTotal) * 100;
+                                if (share < 1) return;
+
+                                const box = document.createElement('div');
+                                let width = share > 40 ? '100%' : (share > 20 ? '48%' : '30%');
+
+                                // Real P&L color based on cost vs current value
+                                const pnl = d.cost > 0 ? ((d.val - d.cost) / d.cost) * 100 : 0;
+                                const isPos = pnl >= 0;
+                                const intensity = Math.min(0.4, 0.1 + Math.abs(pnl) / 200);
+                                const color = isPos
+                                    ? `rgba(0, 230, 118, ${intensity})`
+                                    : `rgba(255, 23, 68, ${intensity})`;
+                                const border = isPos ? 'var(--green)' : 'var(--red)';
+
+                                box.style.cssText = `
+                                flex-grow: 1; width: ${width}; background: ${color}; border: 1px solid ${border};
+                                height: 80px; border-radius: 8px; padding: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;
+                            `;
+                                const pnlSign = pnl >= 0 ? '+' : '';
+                                box.innerHTML = `<div style="font-weight:700; font-size:12px;">${sec}</div><div style="font-size:10px;">%${share.toFixed(1)}</div><div style="font-size:9px; color:${isPos ? 'var(--green)' : 'var(--red)'}; margin-top:2px;">${pnlSign}${pnl.toFixed(1)}%</div>`;
+                                hm.appendChild(box);
+                            });
+                        } else {
+                            hm.innerHTML = '<div style=\"width:100%; padding:20px; text-align:center; color:#555; background:#111; border-radius:8px;\">Hen\u00fcz veri yok \u2014 varlık ekle ve fiyatlar y\u00fcklensin</div>';
+                        }
+                    }
+
+                    // 4. Real Return + Inflation Display
+                    const real = window.Data.getRealReturn();
+                    const rrEl = document.getElementById('anl-real-ret');
+                    const rrBar = document.getElementById('anl-real-bar');
+                    const inflEl = document.getElementById('anl-inflation-rate');
+                    if (rrEl) {
+                        rrEl.innerText = (real >= 0 ? '+' : '') + `%${real.toFixed(2)}`;
+                        rrEl.style.color = real >= 0 ? 'var(--green)' : 'var(--red)';
+                        rrBar.style.background = real >= 0 ? 'var(--green)' : 'var(--red)';
+                    }
+                    if (inflEl) inflEl.innerText = window.Data.inflationRate;
+
+                    // Benchmark
+                    const bench = window.Data.getBenchmark();
+                    const bBox = document.getElementById('anl-bench');
+                    if (bBox) {
+                        bBox.innerHTML = '';
+                        bench.forEach((b, i) => {
+                            bBox.innerHTML += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #222;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:10px; color:#666; width:15px;">#${i + 1}</span>
+                                    <span style="font-size:12px; font-weight:700; color:${b.c}">${b.n}</span>
+                                </div>
+                                <span class="mono" style="font-size:12px; color:${b.c}">%${b.v.toFixed(2)}</span>
+                            </div>
+                        `;
+                        });
+                    }
+
+                    // Dividends
+                    const divs = window.Data.getDividends();
+                    const dBox = document.getElementById('anl-divs');
+                    if (dBox) {
+                        dBox.innerHTML = '';
+                        divs.forEach(d => {
+                            dBox.innerHTML += `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px;">
+                                <span style="color:#ddd;">${d.s}</span>
+                                <span style="color:#888;">${d.d} <b style="color:#fff; margin-left:5px;">${d.v}</b></span>
+                            </div>
+                        `;
+                        });
+                    }
+                } catch (e) {
+                    const aiEl = document.getElementById('ai-comment');
+                    if (aiEl) aiEl.innerHTML = `<span style="color:var(--red);">Hata: ${e.message}</span>`;
+                }
+            },
+
+            togglePrivacy: function () {
+                window.privacyMode = !window.privacyMode;
+                document.getElementById('eye-icon').className = window.privacyMode ? 'fas fa-eye-slash' : 'fas fa-eye';
+                window.UI.render();
+            },
+
+            toggleSim: function () {
+                const box = document.getElementById('sim-box');
+                box.style.display = box.style.display === 'block' ? 'none' : 'block';
+            },
+
+            toggleHis: function () {
+                const box = document.getElementById('hist-box');
+                const isVis = box.style.display === 'block';
+                box.style.display = isVis ? 'none' : 'block';
+                if (!isVis) this.renderHist();
+            },
+
+            renderHist: function () {
+                if (window.editIdx === null) return;
+                const asset = window.Data.assets[window.editIdx];
+                const hist = asset.history || [];
+                const table = document.getElementById('hist-table');
+
+                // Add Entry Form
+                let formHtml = `
+                    <div style="display:flex; gap:5px; margin-bottom:10px; background:#333; padding:5px; border-radius:5px;">
+                        <input type="date" id="hist-date" class="inp" value="${new Date().toISOString().split('T')[0]}" style="flex:1; font-size:11px;">
+                        <input type="number" id="hist-price" class="inp" placeholder="Fiyat" value="${asset.manualPrice || ''}" style="flex:1; font-size:11px;">
+                        <button onclick="window.UI.addHistEntry()" style="background:var(--primary); border:none; color:black; border-radius:3px; padding:0 10px; font-weight:bold;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                `;
+
+                let html = formHtml + '<div style="display:flex; border-bottom:1px solid #444; color:#888; padding:5px;"><span>Tarih</span><span style="margin-left:auto">Fiyat</span></div>';
+
+                // Prepare Chart Data
+                const labels = [];
+                const data = [];
+
+                if (hist.length === 0) {
+                    html += '<div style="padding:10px; color:#666; text-align:center;">Henüz geçmiş verisi yok. Fiyat güncelledikçe buraya eklenecek.</div>';
+                } else {
+                    hist.forEach(h => {
+                        html += `<div style="display:flex; padding:5px; border-bottom:1px solid #333;">
+                            <span class="mono">${h.d}</span>
+                            <span class="mono" style="margin-left:auto">${parseFloat(h.p).toLocaleString('tr-TR')}</span>
+                        </div>`;
+                        labels.push(h.d);
+                        data.push(h.p);
+                    });
+                }
+                table.innerHTML = html;
+
+                // Render Chart
+                if (window.histChart) window.histChart.destroy();
+                const ctx = document.getElementById('hist-chart').getContext('2d');
+                window.histChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Değer Değişimi',
+                            data: data,
+                            borderColor: '#00E676',
+                            backgroundColor: 'rgba(0,230,118,0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { display: false },
+                            y: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                        }
+                    }
+                });
+            },
+
+            addHistEntry: function () {
+                const d = document.getElementById('hist-date').value;
+                const p = parseFloat(document.getElementById('hist-price').value);
+                if (!d || !p) return window.UI.toast('Tarih ve Fiyat girin', false);
+
+                const asset = window.Data.assets[window.editIdx];
+                if (!asset.history) asset.history = [];
+
+                // Remove existing entry for same date if any (Overwrite logic)
+                const existingIdx = asset.history.findIndex(h => h.d === d);
+                if (existingIdx !== -1) asset.history[existingIdx].p = p;
+                else asset.history.push({ d: d, p: p });
+
+                // Update Current Manual Price 
+                asset.manualPrice = p;
+                document.getElementById('inp-manual').value = p; // Sync main input
+
+                window.Data.save();
+                this.renderHist(); // Refresh UI
+                window.UI.toast('Geçmiş Güncellendi', true);
+            },
+
+            renderPieChart: function () {
+                const data = window.Data.getDistribution();
+                const ctx = document.getElementById('anl-pie');
+                if (!ctx) return;
+
+                if (window.anlPieChart) window.anlPieChart.destroy();
+
+                // Sort for better visual (Big to Small)
+                let arr = [];
+                for (let k in data.dist) {
+                    if (data.dist[k] > 0) arr.push({ k: k, v: data.dist[k] });
+                }
+                arr.sort((a, b) => b.v - a.v);
+
+                // Colors
+                const colorMap = {
+                    GOLD: '#FFD700', // Gold
+                    STOCK: '#0d6efd', // Blue
+                    CRYPTO: '#F7931A', // Orange
+                    CASH: '#198754', // Green
+                    FUND: '#6c757d'
+                };
+
+                const labels = arr.map(x => {
+                    if (x.k === 'GOLD') return 'Altın/Emtia';
+                    if (x.k === 'STOCK') return 'Hisse (BIST)';
+                    if (x.k === 'CRYPTO') return 'Kripto';
+                    if (x.k === 'CASH') return 'Nakit/Döviz';
+                    return 'Diğer';
+                });
+                const vals = arr.map(x => x.v);
+                const bg = arr.map(x => colorMap[x.k] || '#666');
+
+                window.anlPieChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: vals,
+                            backgroundColor: bg,
+                            borderColor: '#1a1a1a',
+                            borderWidth: 2,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#ccc', font: { size: 10 }, boxWidth: 10 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        let val = ctx.raw;
+                                        let total = ctx.chart._metasets[ctx.datasetIndex].total;
+                                        let perc = (val / total * 100).toFixed(1) + '%';
+                                        return ctx.label + ': ' + perc + ' (' + Math.round(val).toLocaleString('tr-TR') + ' ₺)';
+                                    }
+                                }
+                            }
+                        },
+                        layout: { padding: 10 }
+                    }
+                });
+            },
+
+            initSearch: function () {
+                const inp = document.getElementById('inp-search');
+                const list = document.getElementById('sug-list');
+
+                inp.addEventListener('input', () => {
+                    const val = inp.value.toUpperCase().trim();
+                    if (val.length < 1) {
+                        list.style.display = 'none';
+                        return;
+                    }
+
+                    const matches = window.MASTER_LIST.filter(m =>
+                        m.s.includes(val) || m.n.toUpperCase().includes(val)
+                    ).slice(0, 6);
+
+                    list.innerHTML = '';
+
+                    // Always show custom entry option first
+                    const customDiv = document.createElement('div');
+                    customDiv.className = 'sug-item';
+                    customDiv.style.background = '#1a1a1a';
+                    customDiv.innerHTML = `<i class="fas fa-plus-circle" style="color:var(--primary); margin-right:8px;"></i><b>${val}</b> <span style="color:#888; margin-left:8px;">Özel Varlık Olarak Ekle</span>`;
+                    customDiv.onclick = () => {
+                        inp.value = val;
+                        list.style.display = 'none';
+                    };
+                    list.appendChild(customDiv);
+
+                    // Then show matches from master list
+                    matches.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = 'sug-item';
+                        div.innerHTML = `<b>${m.s}</b> <span style="color:#666; margin-left:8px;">${m.n}</span> <span style="float:right; font-size:10px; color:var(--gold);">${m.t}</span>`;
+                        div.onclick = () => {
+                            inp.value = m.s;
+                            list.style.display = 'none';
+                        };
+                        list.appendChild(div);
+                    });
+                    list.style.display = 'block';
+                });
+
+                // Hide on blur (with delay for click to register)
+                inp.addEventListener('blur', () => {
+                    setTimeout(() => list.style.display = 'none', 200);
+                });
+            },
+
+            initSim: function () {
+                const inp = document.getElementById('inp-sim-price');
+                inp.addEventListener('input', () => {
+                    const qty = parseFloat(document.getElementById('inp-qty').value) || 0;
+                    const cost = parseFloat(document.getElementById('inp-cost').value) || 0;
+                    const target = parseFloat(inp.value) || 0;
+                    if (qty > 0 && target > 0) {
+                        const val = qty * target;
+                        const pnl = val - (qty * cost);
+                        const pnlP = (cost > 0) ? (pnl / cost) * 100 : 0;
+                        document.getElementById('sim-result').innerHTML = `Değer: ${val.toFixed(0)} <br> Kâr: ${pnl.toFixed(0)} (%${pnlP.toFixed(1)})`;
+                    }
+                });
+            },
+
+            openAdd: function (idx = null) {
+                window.editIdx = idx;
+                const m = document.getElementById('modal-form');
+                const b = document.getElementById('btn-del');
+                document.getElementById('sim-box').style.display = 'none';
+                document.getElementById('inp-sim-price').value = '';
+                document.getElementById('sim-result').innerText = 'Sonuç: --';
+
+                const sInp = document.getElementById('inp-search');
+                const qInp = document.getElementById('inp-qty');
+                const cInp = document.getElementById('inp-cost');
+                const mInp = document.getElementById('inp-manual');
+                const aInp = document.getElementById('inp-alert'); // Alert Input
+
+                if (idx !== null) {
+                    const a = window.Data.assets[idx];
+                    sInp.value = a.symbol; qInp.value = a.qty; cInp.value = a.cost;
+                    mInp.value = a.manualPrice || '';
+                    aInp.value = a.alertPrice || '';
+                    b.style.display = 'block';
+
+                    // Populate asset detail card
+                    const detailCard = document.getElementById('asset-detail-card');
+                    const price = window.Data.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                    const type = window.Data.getType(a.symbol);
+                    let rate = 1;
+                    if (type === 'CRYPTO' || a.symbol === 'XAU') rate = window.Data.usdRate;
+                    const valTRY = a.qty * price * rate;
+                    const costTRY = a.qty * a.cost * rate;
+                    const pnl = valTRY - costTRY;
+                    const pnlP = costTRY > 0 ? (pnl / costTRY) * 100 : 0;
+
+                    // Portfolio weight
+                    let totalPortVal = 0;
+                    window.Data.assets.forEach(asset => {
+                        const p = window.Data.prices[asset.symbol] || parseFloat(asset.manualPrice) || 0;
+                        const t = window.Data.getType(asset.symbol);
+                        let r = 1;
+                        if (t === 'CRYPTO' || asset.symbol === 'XAU') r = window.Data.usdRate;
+                        totalPortVal += asset.qty * p * r;
+                    });
+                    const weight = totalPortVal > 0 ? (valTRY / totalPortVal) * 100 : 0;
+
+                    document.getElementById('detail-value').innerText = `₺${valTRY.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;
+                    const pnlEl = document.getElementById('detail-pnl');
+                    const pnlSign = pnl >= 0 ? '+' : '';
+                    pnlEl.innerHTML = `<span style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${pnlSign}₺${Math.round(pnl).toLocaleString('tr-TR')} (%${pnlP.toFixed(1)})</span>`;
+                    document.getElementById('detail-weight').innerText = `%${weight.toFixed(1)}`;
+                    detailCard.style.display = 'block';
+                } else {
+                    sInp.value = ''; qInp.value = ''; cInp.value = ''; mInp.value = ''; aInp.value = '';
+                    b.style.display = 'none';
+                    document.getElementById('asset-detail-card').style.display = 'none';
+                }
+                m.classList.add('active');
+            },
+
+            save: function () {
+                const sym = document.getElementById('inp-search').value.toUpperCase().trim();
+                const qty = parseFloat(document.getElementById('inp-qty').value) || 0;
+                const cost = parseFloat(document.getElementById('inp-cost').value) || 0;
+                const man = parseFloat(document.getElementById('inp-manual').value) || 0;
+                const alertPrice = parseFloat(document.getElementById('inp-alert').value) || 0;
+
+                if (!sym) return window.UI.toast('Sembol giriniz', false);
+                if (qty === 0) return window.UI.toast('Adet 0 olamaz', false);
+                if (qty < 0) return window.UI.toast('Adet negatif olamaz', false);
+                if (cost < 0) return window.UI.toast('Maliyet negatif olamaz', false);
+
+                if (window.editIdx !== null) {
+                    const existing = window.Data.assets[window.editIdx];
+
+                    // HISTORY TRACKING (For Manual Assets)
+                    if (man > 0 && man !== parseFloat(existing.manualPrice || 0)) {
+                        if (!existing.history) existing.history = [];
+                        const date = new Date().toISOString().split('T')[0];
+                        const last = existing.history[existing.history.length - 1];
+                        // Update same day, or new entry
+                        if (last && last.d === date) last.p = man;
+                        else existing.history.push({ d: date, p: man });
+                    }
+
+                    existing.symbol = sym;
+                    existing.qty = qty;
+                    existing.cost = cost;
+                    existing.manualPrice = man;
+                    existing.alertPrice = alertPrice;
+                    existing.alertTriggered = false;
+                } else {
+                    const newItem = {
+                        id: Date.now(),
+                        symbol: sym, qty, cost,
+                        manualPrice: man,
+                        alertPrice: alertPrice,
+                        alertTriggered: false,
+                        history: man > 0 ? [{ d: new Date().toISOString().split('T')[0], p: man }] : []
+                    };
+                    window.Data.assets.push(newItem);
+                }
+
+                window.Data.save();
+                window.UI.closeAdd();
+                window.UI.render();
+                window.Data.fetchAll().then(window.UI.render); // Re-fetch
+                window.UI.toast('Kaydedildi', true);
+            },
+
+            closeAdd: function () { document.getElementById('modal-form').classList.remove('active'); },
+
+            render: function () {
+                const list = document.getElementById('asset-list');
+                list.innerHTML = '';
+                let totalVal = 0;
+                let totalCost = 0;
+
+                if (window.Data.assets.length === 0) {
+                    list.innerHTML = `
+                        <div style="text-align:center; padding:60px 20px; color:#555;">
+                            <i class="fas fa-wallet" style="font-size:48px; color:#333; margin-bottom:15px; display:block;"></i>
+                            <div style="font-size:16px; font-weight:700; color:#888; margin-bottom:8px;">Portföyün Boş</div>
+                            <div style="font-size:12px; color:#666; line-height:1.6;">
+                                Sağ alttaki <span style="color:var(--primary); font-weight:700;">+</span> butonuna tıklayarak<br>ilk varlığını ekle.
+                            </div>
+                            <div style="font-size:11px; color:#555; margin-top:15px;">
+                                BIST hisseleri, kripto, döviz, altın<br>veya özel varlık ekleyebilirsin.
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('ui-total').innerText = '₺0';
+                    document.getElementById('asset-count').innerText = '0 Varlık';
+                    return;
+                }
+
+                let items = window.Data.assets.map((a, i) => {
+                    let price = 0;
+                    try {
+                        const apiP = window.Data.prices[a.symbol];
+                        price = (apiP !== undefined && apiP !== null) ? apiP : (parseFloat(a.manualPrice) || parseFloat(a.cost) || 0);
+                    } catch (e) { price = 0; }
+
+                    const type = window.Data.getType(a.symbol);
+                    let rate = 1;
+                    if (type === 'CRYPTO' || a.symbol === 'XAU') rate = window.Data.usdRate;
+
+                    const valTRY = a.qty * price * rate;
+                    const costTRY = a.qty * a.cost * rate;
+                    const pnl = valTRY - costTRY;
+
+                    return { ...a, valTRY, costTRY, pnl, price, type, idx: i };
+                });
+
+                items.forEach(i => { totalVal += i.valTRY; totalCost += i.costTRY; });
+                if (totalVal > 0) window.Data.saveHistory(totalVal);
+
+                // Daily P&L card
+                this.renderDailyPnl(items);
+
+                items.sort((a, b) => b.valTRY - a.valTRY);
+
+                let renderItems = items;
+                const fm = window.filterMode;
+                if (fm !== 'ALL') {
+                    renderItems = items.filter(i => {
+                        if (fm === 'STOCK') return i.type === 'STOCK';
+                        if (fm === 'CRYPTO') return i.type === 'CRYPTO';
+                        if (fm === 'GOLD') return i.type === 'GOLD';
+                        if (fm === 'FX') return i.type === 'FX';
+                        return true;
+                    });
+                }
+
+                renderItems.forEach(item => {
+                    const pnlP = item.costTRY > 0 ? (item.pnl / item.costTRY) * 100 : 0;
+                    const cls = item.pnl >= 0 ? 'c-green' : 'c-red';
+                    const sign = item.pnl >= 0 ? '+' : '';
+                    let badgeCls = 'b-stock';
+                    if (item.type === 'CRYPTO') badgeCls = 'b-crypto';
+                    if (item.type === 'GOLD') badgeCls = 'b-gold';
+                    if (item.type === 'FX') badgeCls = 'b-fx';
+
+                    const displayVal = window.privacyMode ? '******' : `₺${item.valTRY.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;
+
+                    const div = document.createElement('div');
+                    div.className = 'asset-item';
+                    div.onclick = function () { window.UI.openAdd(item.idx); };
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center;">
+                            <div class="icon-box" style="color:#fff">${item.symbol[0]}</div>
+                            <div style="margin-left:12px;">
+                                <div style="font-weight:700; color:#fff;">
+                                    ${item.symbol} <span class="badge ${badgeCls}">${item.type}</span>
+                                </div>
+                                <div style="font-size:12px; color:#777;">${item.qty} Adet</div>
+                            </div>
+                        </div>
+                            <div style="text-align:right;">
+                                <div class="mono" style="font-weight:700; font-size:16px;">${displayVal}</div>
+                                <div class="mono ${cls}" style="font-size:12px; font-weight:700;">${sign}%${pnlP.toFixed(2)}</div>
+                                <div style="font-size:10px; color:#555;">
+                                    ${item.price.toFixed(2)} 
+                                    ${item.alertPrice > 0 ? '<i class="fas fa-bell" style="color:var(--gold); margin-left:4px;"></i>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    list.appendChild(div);
+                });
+
+                const displayTotal = window.privacyMode ? '******' : `₺${totalVal.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}`;
+                document.getElementById('ui-total').innerText = displayTotal;
+                document.getElementById('asset-count').innerText = `${window.Data.assets.length} Varlık`;
+
+                const net = totalVal - totalCost;
+                const netP = totalCost > 0 ? (net / totalCost) * 100 : 0;
+                const isPlus = net >= 0;
+                const badge = document.getElementById('ui-pnl-wrap');
+                badge.className = `pnl-badge ${isPlus ? 'bg-green c-green' : 'bg-red c-red'}`;
+                const displayPnl = window.privacyMode ? '******' : `₺${Math.abs(net).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} (%${netP.toFixed(2)})`;
+                badge.innerHTML = `<span>${isPlus ? '+' : ''}${displayPnl}</span>`;
+
+                // Alt currency display
+                const altEl = document.getElementById('ui-total-alt');
+                const curr = window._currency || 'TRY';
+                if (altEl && curr !== 'TRY' && totalVal > 0) {
+                    const usd = window.Data.usdRate || 1;
+                    const eur = window.Data.prices['EUR'] || 1;
+                    if (curr === 'USD') {
+                        altEl.innerText = `≈ $${(totalVal / usd).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+                        altEl.style.display = 'block';
+                    } else if (curr === 'EUR') {
+                        altEl.innerText = `≈ €${(totalVal / eur).toLocaleString('de-DE', { maximumFractionDigits: 0 })}`;
+                        altEl.style.display = 'block';
+                    }
+                } else if (altEl) {
+                    altEl.style.display = 'none';
+                }
+            },
+
+            // Daily P&L rendering
+            renderDailyPnl: function (items) {
+                const card = document.getElementById('daily-pnl-card');
+                const valEl = document.getElementById('daily-pnl-value');
+                const bwEl = document.getElementById('daily-best-worst');
+                if (!card || !valEl || !bwEl) return;
+
+                const stats = window.Data.getPeriodStats();
+                if (!stats.d1 || !stats.d1.v) {
+                    card.style.display = 'none';
+                    return;
+                }
+
+                const dayPnl = stats.d1.v;
+                const dayPct = stats.d1.p;
+                const sign = dayPnl >= 0 ? '+' : '';
+                const color = dayPnl >= 0 ? 'var(--green)' : 'var(--red)';
+
+                card.style.display = 'block';
+                valEl.innerHTML = `<span style="color:${color}">${sign}${Math.round(dayPnl).toLocaleString('tr-TR')} ₺ <span style="font-size:11px;">(%${dayPct.toFixed(1)})</span></span>`;
+
+                // Find best and worst performing asset today
+                if (items && items.length > 0) {
+                    const sorted = items.filter(i => i.costTRY > 0).sort((a, b) => {
+                        const aPct = (a.pnl / a.costTRY) * 100;
+                        const bPct = (b.pnl / b.costTRY) * 100;
+                        return bPct - aPct;
+                    });
+                    if (sorted.length >= 2) {
+                        const best = sorted[0];
+                        const worst = sorted[sorted.length - 1];
+                        const bP = ((best.pnl / best.costTRY) * 100).toFixed(1);
+                        const wP = ((worst.pnl / worst.costTRY) * 100).toFixed(1);
+                        bwEl.innerHTML = `<span style="color:var(--green)">${best.symbol} +%${bP}</span> / <span style="color:var(--red)">${worst.symbol} %${wP}</span>`;
+                    } else {
+                        bwEl.innerHTML = '--';
+                    }
+                }
+            },
+
+            chart: function () {
+                const ctx = document.getElementById('chart-allocation');
+                if (!ctx) return;
+                const labels = window.Data.assets.map(a => a.symbol);
+                const data = window.Data.assets.map(a => {
+                    let p = window.Data.prices[a.symbol] || parseFloat(a.manualPrice) || parseFloat(a.cost) || 0;
+                    let r = 1;
+                    if (window.Data.getType(a.symbol) === 'CRYPTO' || a.symbol === 'XAU') r = window.Data.usdRate;
+                    return a.qty * p * r;
+                });
+                if (window.chartInst) window.chartInst.destroy();
+                window.chartInst = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data, backgroundColor: ['#2962FF', '#00E676', '#FFD700', '#D05CE3', '#FF1744'], borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+                });
+            },
+
+            // --- PRICE ALERT LOGIC (PHASE 4) ---
+            checkAlerts: function () {
+                window.Data.assets.forEach(a => {
+                    if (a.alertPrice && a.alertPrice > 0) {
+                        const current = window.Data.prices[a.symbol] || parseFloat(a.manualPrice) || 0;
+                        // Trigger only if price >= alert AND alert not handled this session
+                        if (current >= a.alertPrice && !a.alertTriggered) {
+                            window.UI.toast(`🔔 ALARM: ${a.symbol} Hedef Fiyata Ulaştı! (${current})`, false); // false = red/attention
+                            a.alertTriggered = true; // Prevent spam
+
+                            // Browser Notification (Optional)
+                            if (Notification.permission === "granted") {
+                                new Notification(`🔔 ${a.symbol} Hedef: ${a.alertPrice}`, { body: `Güncel: ${current}` });
+                            }
+                        } else if (current < a.alertPrice) {
+                            a.alertTriggered = false; // Reset if price drops
+                        }
+                    }
+                });
+            },
+
+            chartHistory: function (rangeDays) {
+                const ctx = document.getElementById('chart-history');
+                if (!ctx) return;
+                let histData = window.Data.history;
+                if (rangeDays && rangeDays > 0 && histData.length > rangeDays) {
+                    histData = histData.slice(-rangeDays);
+                }
+                const labels = histData.map(h => h.d.substring(5));
+                const data = histData.map(h => h.v);
+                if (window.histChartInst) window.histChartInst.destroy();
+                window.histChartInst = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Portföy Değeri',
+                            data: data,
+                            borderColor: '#0A84FF',
+                            backgroundColor: 'rgba(10,132,255,0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false } }, y: { grid: { color: '#222' } } }
+                    }
+                });
+            },
+
+            setHistRange: function (days, btn) {
+                // Update active button styling
+                document.querySelectorAll('#history-range-btns .range-btn').forEach(b => {
+                    b.style.background = '#333';
+                    b.style.color = '#aaa';
+                    b.style.fontWeight = 'normal';
+                });
+                if (btn) {
+                    btn.style.background = 'var(--primary)';
+                    btn.style.color = '#000';
+                    btn.style.fontWeight = '700';
+                }
+                window._histRange = days;
+                this.chartHistory(days);
+            },
+
+            showLastUpdate: function () {
+                const el = document.getElementById('last-update');
+                if (!el || !window._lastUpdate) return;
+                const h = window._lastUpdate.getHours().toString().padStart(2, '0');
+                const m = window._lastUpdate.getMinutes().toString().padStart(2, '0');
+                el.innerText = `· ${h}:${m}`;
+            },
+
+            toggleCurrency: function () {
+                const currencies = ['TRY', 'USD', 'EUR'];
+                const current = window._currency || 'TRY';
+                const next = currencies[(currencies.indexOf(current) + 1) % currencies.length];
+                window._currency = next;
+                document.getElementById('currency-label').innerText = next;
+                this.render();
+            }
+        };
+
+        // --- SWIPE NAVIGATION ---
+        (function () {
+            let startX = 0;
+            let startY = 0;
+            const tabs = ['portfolio', 'analysis', 'settings'];
+            let currentTabIndex = 0;
+
+            document.addEventListener('touchstart', function (e) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+
+            document.addEventListener('touchend', function (e) {
+                const endX = e.changedTouches[0].clientX;
+                const endY = e.changedTouches[0].clientY;
+                const diffX = endX - startX;
+                const diffY = endY - startY;
+
+                // Only trigger if horizontal swipe is stronger than vertical
+                if (Math.abs(diffX) > 80 && Math.abs(diffX) > Math.abs(diffY)) {
+                    // Find current active tab
+                    const navBtns = document.querySelectorAll('.nav-btn');
+                    navBtns.forEach((btn, i) => {
+                        if (btn.classList.contains('active')) currentTabIndex = i;
+                    });
+
+                    if (diffX < 0 && currentTabIndex < tabs.length - 1) {
+                        // Swipe left -> next tab
+                        window.UI.tab(tabs[currentTabIndex + 1]);
+                    } else if (diffX > 0 && currentTabIndex > 0) {
+                        // Swipe right -> previous tab
+                        window.UI.tab(tabs[currentTabIndex - 1]);
+                    }
+                }
+            }, { passive: true });
+        })();
+
+        // --- PULL TO REFRESH ---
+        (function () {
+            let pullStartY = 0;
+            let isPulling = false;
+            document.addEventListener('touchstart', function (e) {
+                if (window.scrollY === 0) {
+                    pullStartY = e.touches[0].clientY;
+                    isPulling = true;
+                }
+            }, { passive: true });
+            document.addEventListener('touchend', async function (e) {
+                if (!isPulling) return;
+                isPulling = false;
+                const pullEndY = e.changedTouches[0].clientY;
+                const pullDiff = pullEndY - pullStartY;
+                if (pullDiff > 120 && window.scrollY === 0) {
+                    const indicator = document.getElementById('pull-indicator');
+                    indicator.style.display = 'block';
+                    await window.Data.fetchAll();
+                    window.UI.render();
+                    window.App.updateTicker();
+                    window._lastUpdate = new Date();
+                    window.UI.showLastUpdate();
+                    indicator.style.display = 'none';
+                    window.UI.toast('Fiyatlar güncellendi', true);
+                }
+            }, { passive: true });
+        })();
+
+        window.onload = function () {
+            setTimeout(window.App.init, 100);
+        };
+    </script>
+</body>
+
+</html>

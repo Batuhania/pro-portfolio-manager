@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gizlilik Politikası — Pro Portfolio Manager</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #050505;
+            color: #ccc;
+            font-family: 'Inter', system-ui, sans-serif;
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            color: #fff;
+            font-size: 16px;
+            margin: 25px 0 8px;
+        }
+
+        p,
+        li {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        .date {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        a {
+            color: #2962FF;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2962FF;
+            text-decoration: none;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back">← Ana Sayfa</a>
+    <h1>Gizlilik Politikası</h1>
+    <p class="date">Son güncelleme: 19 Şubat 2026</p>
+
+    <h2>1. Toplanan Veriler</h2>
+    <p>Pro Portfolio Manager, verilerinizi yalnızca <strong>cihazınızda (localStorage)</strong> saklar. Sunucularımıza
+        herhangi bir kişisel veri gönderilmez.</p>
+    <ul>
+        <li><strong>Portföy verileri:</strong> Eklediğiniz varlıklar, miktarlar ve maliyet bilgileri yalnızca
+            tarayıcınızın yerel depolama alanında tutulur.</li>
+        <li><strong>API anahtarları:</strong> Supabase ve OpenAI API anahtarlarınız yalnızca cihazınızda saklanır, başka
+            hiçbir yere iletilmez.</li>
+        <li><strong>Fiyat verileri:</strong> Güncel fiyatlar için üçüncü taraf API'lere (Supabase, ExchangeRate API)
+            istek gönderilir. Bu isteklerde kişisel bilgi paylaşılmaz.</li>
+    </ul>
+
+    <h2>2. Veri Paylaşımı</h2>
+    <p>Kişisel verileriniz <strong>hiçbir üçüncü tarafla paylaşılmaz</strong>. Uygulama yalnızca fiyat verisi almak için
+        harici API'lere bağlanır.</p>
+
+    <h2>3. Üçüncü Taraf Hizmetler</h2>
+    <ul>
+        <li><strong>Supabase:</strong> Fiyat verisi kaynağı (kullanıcı tarafından yapılandırılır)</li>
+        <li><strong>ExchangeRate API:</strong> Döviz kuru verileri</li>
+        <li><strong>OpenAI API:</strong> AI analiz özelliği (opsiyonel, kullanıcı tarafından etkinleştirilir)</li>
+        <li><strong>Google Fonts:</strong> Yazı tipi yükleme</li>
+        <li><strong>Font Awesome:</strong> İkon kütüphanesi</li>
+    </ul>
+
+    <h2>4. Veri Güvenliği</h2>
+    <p>Tüm veriler cihazınızda şifrelenmemiş olarak localStorage'da saklanır. Cihaz güvenliğiniz sizin
+        sorumluluğunuzdadır. API anahtarlarınızı başkalarıyla paylaşmayınız.</p>
+
+    <h2>5. Çocukların Gizliliği</h2>
+    <p>Bu uygulama 13 yaşın altındaki çocuklara yönelik değildir ve onlardan bilerek veri toplamaz.</p>
+
+    <h2>6. Değişiklikler</h2>
+    <p>Bu gizlilik politikası zaman zaman güncellenebilir. Güncellemeler bu sayfada yayınlanacaktır.</p>
+
+    <h2>7. İletişim</h2>
+    <p>Sorularınız için: <a href="mailto:batuhania@proton.me">batuhania@proton.me</a></p>
+</body>
+
+</html>
